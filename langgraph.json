@@ -1,0 +1,10 @@
+{
+  "python_version": "3.12",
+  "dockerfile_lines": [],
+  "dependencies": ["."],
+  "graphs": {
+    "ai": "./src/graph/sealos_ai.py:graph",
+    "sample_agent": "./src/graph/sealos_ai.py:graph"
+  },
+  "env": ".env"
+}
