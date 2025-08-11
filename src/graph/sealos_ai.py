@@ -8,14 +8,14 @@ from typing_extensions import Literal
 
 from copilotkit import CopilotKitState
 
-from langchain_core.messages import (
-    AIMessage,
-    SystemMessage,
-)
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph
 from langgraph.types import Command
 from langgraph.prebuilt import ToolNode
+from langgraph.types import interrupt
+from langgraph.runtime import Runtime
+from langchain_tavily import TavilySearch
 
 from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import (
@@ -35,67 +35,90 @@ class SealosAIState(CopilotKitState):
     base_url: str
     api_key: str
     model: str
-    system_prompt: str
+
+
+tool = TavilySearch(max_results=2)
+tools = [tool]
 
 
 async def sealos_ai_node(
-    state: SealosAIState, config: RunnableConfig
+    state: SealosAIState,
 ) -> Command[Literal["tool_node", "__end__"]]:
     """
     Optimized chat node based on the ReAct design pattern.
     Handles model binding, system prompts, Sealos context, and tool calls.
     """
     # Extract state data
-    (messages, base_url, api_key, model, system_prompt) = get_state_values(
+    (
+        messages,
+        base_url,
+        api_key,
+        model,
+    ) = get_state_values(
         state,
         {
             "messages": [],
             "base_url": None,
             "api_key": None,
             "model": None,
-            "system_prompt": "",
         },
     )
 
-    # Determine if tools should be bound
-    should_bind_tools = has_copilot_actions(state)
+    model = get_sealos_model(model, base_url, api_key)
 
-    llm = get_sealos_model(model, base_url, api_key)
+    all_tools = tools + get_copilot_actions(state)
 
-    # Only bind tools when copilotkit and actions both exist
-    if should_bind_tools:
-        copilotkit = get_copilot_actions(state)
-        # Bind tools to model
-        model_with_tools = llm.bind_tools(copilotkit, parallel_tool_calls=False)
-    else:
-        # Use model without tools when copilotkit actions are not available
-        model_with_tools = llm
+    model_with_tools = model.bind_tools(all_tools, parallel_tool_calls=False)
 
     # Build messages with system prompt and optional Sealos data
-    messages_list = [SystemMessage(content=system_prompt)]
-    messages_list.extend(messages)
+    messages.append(
+        SystemMessage(
+            content="you are sealos brain. You are here to help create and manage sealos projects. You can help with creating new projects, deploying templates, and importing github repos. you can create devbox for development and clusters for storing data, based on the request of the user."
+        )
+    )
 
     # Get model response
-    response = await model_with_tools.ainvoke(messages_list, config)
+    response = await model_with_tools.ainvoke(messages)
 
-    # Handle tool calls - route to tool_node if non-CopilotKit tools are called
-    if (
-        isinstance(response, AIMessage)
-        and response.tool_calls
-        and not any(
-            action.get("name") == response.tool_calls[0].get("name")
-            for action in get_copilot_actions(state)
-        )
-    ):
-        return Command(goto="tool_node", update={"messages": response})
+    # Handle tool calls
+    # if isinstance(response, AIMessage) and response.tool_calls:
+    #     # Check if it's a copilot action
+    #     is_copilot_action = any(
+    #         action.get("name") == response.tool_calls[0].get("name")
+    #         for action in get_copilot_actions(state)
+    #     )
 
-    return Command(goto=END, update={"messages": response})
+    #     if is_copilot_action:
+    #         # For copilot actions, request approval
+    #         tool_call_name = response.tool_calls[0].get("name")
+    #         # this line prevents a bug: resumption of a tool call would trigger the same tool call again, which causes two identical tool call messages followed by the tool result, setting the response to [] neutralizes the initial tool call
+    #         # note added later: resumption from interruption reexecutes the node again, which causes the code before the interruption run again, this is possibly the cause of the double tool call, but I still can't locate where did the copilotkit on frontend take the parameters and execute the tool call, obviously not in the langgraph backend since there is no 'copilotkit node' to execute the tool call.
+    #         # response = []
+    #         # state["approval"] = interrupt(
+    #         #     {
+    #         #         "type": "approval",
+    #         #         "content": "please approve the action " + tool_call_name,
+    #         #     }
+    #         # )
+    #         # if state["approval"] == "false":
+    #         #     return Command(
+    #         #         goto="__end__",
+    #         #         update={
+    #         #             "messages": HumanMessage(content="User rejected the action")
+    #         #         },
+    #         #     )
+    #     else:
+    #         # Route to tool_node for non-CopilotKit tools
+    #         # return Command(goto="tool_node", update={"messages": response})
+    #         pass
+
+    return Command(goto="__end__", update={"messages": response})
 
 
 # Define the workflow graph
 workflow = StateGraph(SealosAIState)
 workflow.add_node("sealos_ai_node", sealos_ai_node)
-workflow.add_node("tool_node", ToolNode(tools=[]))
+workflow.add_node("tool_node", ToolNode(tools=tools))
 workflow.add_edge("tool_node", "sealos_ai_node")
 workflow.set_entry_point("sealos_ai_node")
 

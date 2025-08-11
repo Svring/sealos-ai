@@ -1,2 +1,3 @@
 [rules]
 unresolved-import = "ignore"
+unknown-argument = "ignore"
