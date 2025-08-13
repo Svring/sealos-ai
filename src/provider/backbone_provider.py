@@ -12,7 +12,7 @@ def get_sealos_model(
     api_key: Optional[str] = None,
 ):
     return ChatOpenAI(
-        model=model_name or "gpt-4o-mini",
+        model=model_name or "gpt-4o",
         base_url=base_url or os.getenv("SEALOS_BASE_URL"),
         api_key=api_key or os.getenv("SEALOS_API_KEY"),
     )

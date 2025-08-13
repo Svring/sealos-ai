@@ -7,6 +7,18 @@ from typing_extensions import Literal, TypedDict
 from pydantic import BaseModel
 
 
+class ProjectBrief(BaseModel):
+    briefs: List[str]
+    status: Literal["pending", "active", "completed"]
+
+
+class ProjectPlanWithStatus(BaseModel):
+    name: str
+    description: str
+    resources: "ProjectResources"
+    status: Literal["pending", "active", "completed"]
+
+
 class DevBox(BaseModel):
     runtime: Literal[
         "C++",
@@ -87,5 +99,13 @@ class ProjectPlan(BaseModel):
 
 
 class RouteDecision(BaseModel):
-    next_node: Literal["__end__", "compose_new_project"]
+    next_node: Literal["__end__", "compose_project_brief"]
     info: str
+
+
+class RouteOnly(BaseModel):
+    next_node: Literal["__end__", "compose_project_brief", "manage_resource"]
+
+
+class ProjectRequirements(BaseModel):
+    requirements: List[str]
