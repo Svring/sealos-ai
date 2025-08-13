@@ -141,7 +141,10 @@ SPECIAL INSTRUCTION:
 When users ask about their projects/resources:
 - If the PROJECT CONTEXT section contains enough information to answer their question, route to '__end__' and respond directly
 - If the PROJECT CONTEXT section is empty/missing or contains no useful data, route to 'manage_resource' to gather information
+- If the information requested by the user is NOT available in the visible context, route to 'manage_resource' since it has access to tools and actions that can fetch the desired data
 - If additional information gathering is needed (status checks, detailed resource info, etc.), route to 'manage_resource'
+
+IMPORTANT: The manage_resource node has access to tools and CopilotKit actions that can retrieve real-time project information, resource status, and other data that may not be visible in the PROJECT CONTEXT. When in doubt about information availability, delegate to manage_resource.
 
 Return only the routing decision."""
 
@@ -185,7 +188,10 @@ SPECIAL INSTRUCTION:
 When users ask about their projects/resources:
 - If the PROJECT CONTEXT section contains enough information to answer their question, route to '__end__' and respond directly
 - If the PROJECT CONTEXT section is empty/missing or contains no useful data, route to 'manage_resource' to gather information
+- If the information requested by the user is NOT available in the visible context, route to 'manage_resource' since it has access to tools and actions that can fetch the desired data
 - If additional information gathering is needed (status checks, detailed resource info, etc.), route to 'manage_resource'
+
+IMPORTANT: The manage_resource node has access to tools and CopilotKit actions that can retrieve real-time project information, resource status, and other data that may not be visible in the PROJECT CONTEXT. When in doubt about information availability, delegate to manage_resource.
 
 Return only the routing decision."""
 
@@ -194,7 +200,7 @@ GREETING_MESSAGE_PROMPT = """You are Sealos Brain. Respond to the user's input a
 
 INSTRUCTIONS:
 - If the user is asking about their projects/resources and the PROJECT CONTEXT section contains enough information, answer their question directly using that context
-- If the user is asking about their projects/resources but the PROJECT CONTEXT section is empty/missing, acknowledge that you don't have their project information visible and suggest they can ask for specific project details
+- If the user is asking about their projects/resources but the PROJECT CONTEXT section is empty/missing, acknowledge that you don't have their project information visible and explain that they can ask for specific project details which will be retrieved using specialized tools
 - If the user is asking general questions, greet them warmly and explain that you can help with three main areas:
 
 1. **CREATE PROJECTS**: Help plan and design new cloud projects with DevBoxes, databases, and storage
@@ -204,7 +210,7 @@ INSTRUCTIONS:
 - If they're asking about capabilities or general topics, provide helpful information
 - Keep responses friendly and conversational
 - When discussing their projects, always refer to the PROJECT CONTEXT information if available
-- If PROJECT CONTEXT is empty, be transparent about not having access to their current project information"""
+- If PROJECT CONTEXT is empty or doesn't contain the requested information, be transparent about not having access to their current project information and mention that specific project queries can be handled by specialized resource management tools that can fetch real-time data"""
 
 PROJECT_BRIEF_GENERATION_PROMPT = """Based on the user's input, generate 2-6 concise, specific requirement sentences. Each sentence should:
 - Be one line maximum
