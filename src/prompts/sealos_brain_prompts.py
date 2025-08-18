@@ -109,7 +109,7 @@ The user is working with their existing project resources. These are THEIR proje
 
 USER INTENTIONS:
 
-1. CREATE PROJECT (compose_project_brief):
+1. CREATE PROJECT (compose_new_project):
    - Adding new DevBoxes (e.g., "add another devbox", "need Python environment", "create a separate backend")
    - Adding new Databases (e.g., "add Redis", "need MongoDB", "require caching database")
    - Adding new Buckets (e.g., "need file storage", "add image bucket", "require backup storage")
@@ -132,7 +132,7 @@ USER INTENTIONS:
    - Asking for explanations or information that's already available
 
 ROUTING RULES:
-- If user wants to CREATE/ADD/MODIFY project resources: next_node='compose_project_brief'
+- If user wants to CREATE/ADD/MODIFY project resources: next_node='compose_new_project'
 - If user wants to MANAGE/OPERATE existing resources OR asks about their projects but needs additional information: next_node='manage_resource'
 - If user asks about their projects/resources BUT the information is already visible in the PROJECT CONTEXT: next_node='__end__'
 - If user wants general conversation that can be answered from visible context: next_node='__end__'
@@ -156,7 +156,7 @@ The user may have existing projects or be starting fresh. If they have existing 
 
 USER INTENTIONS:
 
-1. CREATE PROJECT (compose_project_brief):
+1. CREATE PROJECT (compose_new_project):
    - Building something new (website, app, service, etc.)
    - Creating new project resources
    - Planning a new development environment
@@ -179,7 +179,7 @@ USER INTENTIONS:
    - Questions about their projects/resources that can be fully answered from the PROJECT CONTEXT already visible
 
 ROUTING RULES:
-- If user wants to CREATE/BUILD a new project: next_node='compose_project_brief'
+- If user wants to CREATE/BUILD a new project: next_node='compose_new_project'
 - If user wants to MANAGE existing resources OR asks about their projects but needs additional information: next_node='manage_resource'
 - If user asks about their projects/resources BUT the information is already visible in the PROJECT CONTEXT: next_node='__end__'
 - If user wants general conversation that can be answered from visible context: next_node='__end__'

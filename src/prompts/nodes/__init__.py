@@ -12,11 +12,6 @@ from .entry_node_prompts import (
     build_routing_prompt_new_project,
 )
 
-# Compose project brief prompts
-from .compose_project_brief_prompts import (
-    PROJECT_BRIEF_GENERATION_PROMPT,
-    PROJECT_BRIEF_MODIFICATION_PROMPT,
-)
 
 # Compose new project prompts
 from .compose_new_project_prompts import (
@@ -41,9 +36,6 @@ __all__ = [
     "EXISTING_PROJECT_PLAN_TEMPLATE",
     "build_routing_prompt_existing_project",
     "build_routing_prompt_new_project",
-    # Compose project brief
-    "PROJECT_BRIEF_GENERATION_PROMPT",
-    "PROJECT_BRIEF_MODIFICATION_PROMPT",
     # Compose new project
     "COMPOSE_NEW_PROJECT_PROMPT",
     # Summarize project

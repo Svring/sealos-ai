@@ -4,7 +4,7 @@ Creates a project plan based on optimized requirements.
 """
 
 from typing_extensions import Literal
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
@@ -15,15 +15,18 @@ from copilotkit.langgraph import (
     copilotkit_emit_state,
 )
 
-from src.graph.sealos_brain.schemas import ProjectPlan
+from src.graph.sealos_brain.schemas import ProjectPlan, ProjectPlanWithStatus
 from src.graph.sealos_brain.state import SealosBrainState
+from src.prompts.nodes.summarize_project_prompts import (
+    SUMMARIZE_PROJECT_PROMPT,
+)
 
 
 async def compose_new_project(
     state: SealosBrainState, config: RunnableConfig
-) -> Command[Literal["summarize_project"]]:
+) -> Command[Literal["__end__"]]:
     (
-        project_brief,
+        messages,
         project_plan,
         base_url,
         api_key,
@@ -31,7 +34,7 @@ async def compose_new_project(
     ) = get_state_values(
         state,
         {
-            "project_brief": {"briefs": [], "status": "pending"},
+            "messages": [],
             "project_plan": None,
             "base_url": None,
             "api_key": None,
@@ -121,28 +124,34 @@ Return structured data with: name, description, and resources arrays. Ensure the
         config, emit_messages=False, emit_tool_calls=False
     )
 
-    # Join all briefs into a single string for the LLM
-    briefs_text = "\n".join(project_brief.get("briefs", []))
+    # Extract concise user intent from the latest message(s)
+    user_intent_text = "\n".join(
+        [
+            m.content
+            for m in messages
+            if hasattr(m, "content") and isinstance(m.content, str)
+        ]
+    )[-1000:]
 
     # Prepare context message with emphasis on following the brief
     if has_existing_project:
         context_message = f"""
-CRITICAL: The following project brief contains the NEW REQUIREMENTS that must be implemented.
-These requirements take priority and should guide all modifications to the existing project.
+CRITICAL: Modify the existing project according to the user's latest requests below.
+Treat these as the new specifications and keep only resources that remain relevant.
 
-PROJECT BRIEF (NEW REQUIREMENTS):
-{briefs_text}
+USER REQUEST:
+{user_intent_text}
 
-You must modify the existing project plan to fully satisfy these new requirements while maintaining any existing resources that are still relevant."""
+You must modify the existing project plan to fully satisfy these requirements while maintaining any existing resources that are still relevant."""
     else:
         context_message = f"""
-CRITICAL: The following project brief contains the EXACT REQUIREMENTS that must be implemented.
-Every requirement in this brief must be addressed in your resource plan.
+CRITICAL: Create a new minimal project plan strictly based on the user's latest requests below.
+Only include resources that are essential to satisfy the request.
 
-PROJECT BRIEF (REQUIREMENTS):
-{briefs_text}
+USER REQUEST:
+{user_intent_text}
 
-You must create a project plan that fully satisfies all these requirements."""
+You must create a project plan that fully satisfies these requirements using the fewest resources possible."""
 
     plan: ProjectPlan = await structured.ainvoke(
         [system, SystemMessage(content=context_message)],
@@ -158,22 +167,53 @@ You must create a project plan that fully satisfies all these requirements."""
     #         "status": "completed",
     #     },
     # }
-    state["project_plan"] = {
-        "name": plan.name,
-        "description": plan.description,
-        "resources": plan.resources,
-        "status": "completed",
-    }
+    state["project_plan"] = ProjectPlanWithStatus(
+        name=plan.name,
+        description=plan.description,
+        resources=plan.resources,
+        status="completed",
+    )
     await copilotkit_emit_state(config, state)
 
+    # Build final summary message (previously in summarize_project)
+    resources = plan.resources
+    devboxes = resources.devboxes or []
+    databases = resources.databases or []
+    buckets = resources.buckets or []
+
+    summary_system = SystemMessage(content=SUMMARIZE_PROJECT_PROMPT)
+    summary_prompt = f"""
+Project Name: {plan.name}
+Description: {plan.description}
+
+DevBoxes (Development Environments):
+{chr(10).join([f"- {box.runtime}: {box.description}" for box in devboxes]) if devboxes else "- None recommended"}
+
+Databases:
+{chr(10).join([f"- {db.type}: {db.description}" for db in databases]) if databases else "- None recommended"}
+
+Object Storage Buckets:
+{chr(10).join([f"- {bucket.policy} policy: {bucket.description}" for bucket in buckets]) if buckets else "- None recommended"}
+
+Provide a sentence explaining the rationale and specific usage guidance, for example, devbox could be the main development environment, database could be the main database, etc.
+
+After the explanation, add a simple sentence encouraging the user to press the create button to deploy this project and continue chatting to refine the plan further.
+"""
+
+    summary = await model.ainvoke(
+        [summary_system, SystemMessage(content=summary_prompt)],
+        config=modified_config,
+    )
+
     return Command(
-        goto="summarize_project",
+        goto="__end__",
         update={
-            "project_plan": {
-                "name": plan.name,
-                "description": plan.description,
-                "resources": plan.resources,
-                "status": "completed",
-            }
+            "messages": [AIMessage(content=summary.content)],
+            "project_plan": ProjectPlanWithStatus(
+                name=plan.name,
+                description=plan.description,
+                resources=plan.resources,
+                status="completed",
+            ),
         },
     )

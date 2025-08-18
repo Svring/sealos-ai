@@ -4,7 +4,8 @@
   "dependencies": ["."],
   "graphs": {
     "ai": "./src/graph/sealos_ai.py:graph",
-    "sealos_brain": "./src/graph/sealos_brain/graph.py:graph"
+    "sealos_brain": "./src/graph/sealos_brain/graph.py:graph",
+    "brain": "./src/graph/brain/graph.py:graph"
   },
   "env": ".env"
 }

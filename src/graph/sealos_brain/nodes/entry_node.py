@@ -12,7 +12,6 @@ from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import get_state_values, get_copilot_actions
 from copilotkit.langgraph import (
     copilotkit_customize_config,
-    copilotkit_emit_state,
     copilotkit_exit,
 )
 from src.prompts.nodes.entry_node_prompts import (
@@ -28,7 +27,7 @@ from src.graph.sealos_brain.state import SealosBrainState
 
 async def entry_node(
     state: SealosBrainState, config: RunnableConfig
-) -> Command[Literal["compose_project_brief", "manage_resource", "__end__"]]:
+) -> Command[Literal["compose_new_project", "manage_resource", "__end__"]]:
     await copilotkit_exit(config)
 
     (
@@ -175,15 +174,9 @@ async def entry_node(
             return Command(goto="manage_resource")
 
     # STEP 2: Generate Content Based on Route
-    if route_decision.next_node == "compose_project_brief":
-        # Route to the new compose_project_brief node and set project brief status to active
-        state["project_brief"] = {"briefs": [], "status": "active"}
-        await copilotkit_emit_state(config, state)
-
-        return Command(
-            goto="compose_project_brief",
-            update={"project_brief": {"briefs": [], "status": "active"}},
-        )
+    if route_decision.next_node == "compose_new_project":
+        # Directly go to compose_new_project for creating a new plan
+        return Command(goto="compose_new_project")
     elif route_decision.next_node == "manage_resource":
         # Route to resource management node
         return Command(goto="manage_resource")
@@ -202,7 +195,7 @@ async def entry_node(
 
         greeting_response = await content_model.ainvoke(
             greeting_messages,
-            config=modified_config,
+            # config=modified_config,
         )
 
         updated_messages = [*messages, AIMessage(content=greeting_response.content)]

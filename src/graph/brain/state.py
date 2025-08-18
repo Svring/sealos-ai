@@ -1,22 +1,6 @@
-"""
-Pydantic schemas for the New Project agent.
-"""
-
-from typing import List
-from typing_extensions import Literal, TypedDict
+from typing import Any, Literal, List
+from copilotkit import CopilotKitState
 from pydantic import BaseModel
-
-
-class ProjectBrief(BaseModel):
-    briefs: List[str]
-    status: Literal["pending", "active", "completed"]
-
-
-class ProjectPlanWithStatus(BaseModel):
-    name: str
-    description: str
-    resources: "ProjectResources"
-    status: Literal["pending", "active", "completed"]
 
 
 class DevBox(BaseModel):
@@ -86,26 +70,23 @@ class ProjectResources(BaseModel):
     buckets: List[ObjectStorageBucket]
 
 
-class ProjectInfo(TypedDict, total=False):
+class ProjectProposal(BaseModel):
     name: str
     description: str
     resources: ProjectResources
 
 
-class ProjectPlan(BaseModel):
-    name: str
-    description: str
-    resources: ProjectResources
+class BrainState(CopilotKitState):
+    """
+    Brain State
 
+    Inherits from CopilotKitState and adds Sealos-specific fields.
+    """
 
-class RouteDecision(BaseModel):
-    next_node: Literal["__end__", "compose_new_project"]
-    info: str
+    base_url: str
+    api_key: str
+    model: str
 
-
-class RouteOnly(BaseModel):
-    next_node: Literal["__end__", "compose_new_project", "manage_resource"]
-
-
-class ProjectRequirements(BaseModel):
-    requirements: List[str]
+    stage: Literal["project", "resource"]
+    project_proposal: ProjectProposal
+    resource_context: Any
