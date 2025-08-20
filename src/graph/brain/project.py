@@ -11,6 +11,10 @@ from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import get_state_values
 from src.graph.brain.state import BrainState, ProjectProposal
 
+from copilotkit.langgraph import (
+    copilotkit_customize_config,
+)
+
 
 # System prompt for project plan generation
 PROJECT_PLAN_PROMPT = """You are a cloud architect creating a minimal project plan.
@@ -72,9 +76,14 @@ async def project_agent(
     model = get_sealos_model(model_name, base_url, api_key)
     structured_model = model.with_structured_output(ProjectProposal)
 
+    modified_config = copilotkit_customize_config(
+        config, emit_messages=False, emit_tool_calls=True
+    )
+
     # Generate project plan
     project_plan: ProjectProposal = await structured_model.ainvoke(
-        [SystemMessage(content=PROJECT_PLAN_PROMPT), *messages]
+        [SystemMessage(content=PROJECT_PLAN_PROMPT), *messages],
+        config=modified_config,
     )
 
     # Format the response
@@ -83,16 +92,8 @@ async def project_agent(
     databases = resources.databases or []
     buckets = resources.buckets or []
 
-    response_content = f"""**Project Plan: {project_plan.name}**
-
-{project_plan.description}
-
-**Resources:**
-• **DevBoxes**: {chr(10).join([f"  - {box.runtime}: {box.description}" for box in devboxes]) if devboxes else "  - None recommended"}
-• **Databases**: {chr(10).join([f"  - {db.type}: {db.description}" for db in databases]) if databases else "  - None recommended"}
-• **Storage Buckets**: {chr(10).join([f"  - {bucket.policy} policy: {bucket.description}" for bucket in buckets]) if buckets else "  - None recommended"}
-
-Press the create button to deploy this project and continue chatting to refine the plan further."""
+    response_content = """
+"""
 
     return Command(
         goto="__end__",
