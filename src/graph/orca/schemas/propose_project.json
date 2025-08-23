@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "propose_project",
+  "description": "Propose new or modify existing project resources allocations based on the user's request.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 12,
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 30
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "devbox": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 12,
+                "pattern": "^[a-z0-9_-]+$"
+              },
+              "runtime": {
+                "type": "string",
+                "enum": [
+                  "C++",
+                  "Nuxt3",
+                  "Hugo",
+                  "Java",
+                  "Chi",
+                  "PHP",
+                  "Rocket",
+                  "Quarkus",
+                  "Debian",
+                  "Ubuntu",
+                  "Spring Boot",
+                  "Flask",
+                  "Nginx",
+                  "Vue.js",
+                  "Python",
+                  "VitePress",
+                  "Node.js",
+                  "Echo",
+                  "Next.js",
+                  "Angular",
+                  "React",
+                  "Svelte",
+                  "Gin",
+                  "Rust",
+                  "UmiJS",
+                  "Docusaurus",
+                  "Hexo",
+                  "Vert.x",
+                  "Go",
+                  "C",
+                  "Iris",
+                  "Astro",
+                  "MCP",
+                  "Django",
+                  "Express.js",
+                  ".Net"
+                ]
+              },
+              "reliances": {
+                "type": "object",
+                "properties": {
+                  "database": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "bucket": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "runtime", "description"],
+            "additionalProperties": false
+          }
+        },
+        "database": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 12,
+                "pattern": "^[a-z0-9_-]+$"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "postgresql",
+                  "mongodb",
+                  "apecloud-mysql",
+                  "redis",
+                  "kafka",
+                  "weaviate",
+                  "milvus",
+                  "pulsar"
+                ]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "type", "description"],
+            "additionalProperties": false
+          }
+        },
+        "bucket": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 12,
+                "pattern": "^[a-z0-9_-]+$"
+              },
+              "policy": {
+                "type": "string",
+                "enum": ["Private", "PublicRead", "PublicReadwrite"]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "policy", "description"],
+            "additionalProperties": false
+          }
+        },
+        "app": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 12,
+                "pattern": "^[a-z0-9_-]+$"
+              },
+              "description": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9._-]+(/[a-zA-Z0-9._-]+)*(:[a-zA-Z0-9._-]+)?(@sha256:[a-fA-F0-9]{64})?$"
+              },
+              "reliances": {
+                "type": "object",
+                "properties": {
+                  "database": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "bucket": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": ["name", "description", "image"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["name", "description", "resources"],
+  "additionalProperties": false
+}
