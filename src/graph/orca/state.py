@@ -5,12 +5,30 @@ import re
 
 
 class Reliances(TypedDict, total=False):
-    database: List[str]
-    bucket: List[str]
+    """
+    Resource dependencies configuration.
+
+    Defines which databases and storage buckets a resource depends on.
+    All fields are optional and can be empty lists if no dependencies exist.
+    """
+
+    database: List[str]  # List of database names this resource depends on
+    bucket: List[str]  # List of bucket names this resource depends on
 
 
 class DevBox(BaseModel):
-    name: str = Field(..., max_length=12)
+    """
+    Development environment configuration.
+
+    Represents a development environment with a specific runtime and optional
+    dependencies on other resources like databases or storage buckets.
+    """
+
+    name: str = Field(
+        ...,
+        max_length=12,
+        description="DevBox name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'dev-env', 'frontend_dev', 'api-dev'",
+    )
     runtime: Literal[
         "C++",
         "Nuxt3",
@@ -48,22 +66,53 @@ class DevBox(BaseModel):
         "Django",
         "Express.js",
         ".Net",
-    ]
-    reliances: Optional[Reliances] = None
-    description: str
+    ] = Field(
+        description="The runtime environment for development (e.g., 'Next.js', 'Python', 'React')"
+    )
+    reliances: Optional[Reliances] = Field(
+        default=None,
+        description="Optional dependencies on databases or storage buckets. Specify resource names that this DevBox depends on.",
+    )
+    description: str = Field(
+        description="Brief description of the development environment and its purpose"
+    )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
+        """
+        Validate DevBox name format.
+
+        Args:
+            v: The DevBox name to validate
+
+        Returns:
+            The validated DevBox name
+
+        Raises:
+            ValueError: If the name doesn't match the required format
+        """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "Name must contain only lowercase letters, numbers, underscores, and hyphens"
+                "DevBox name must contain only lowercase letters, numbers, underscores, and hyphens. "
+                "Examples: 'dev-env', 'frontend_dev', 'api-dev'. "
+                f"Invalid name: '{v}'"
             )
         return v
 
 
 class Database(BaseModel):
-    name: str = Field(..., max_length=12)
+    """
+    Database configuration.
+
+    Represents a database instance with a specific type and configuration.
+    """
+
+    name: str = Field(
+        ...,
+        max_length=12,
+        description="Database name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'main-db', 'cache_db', 'analytics'",
+    )
     type: Literal[
         "postgresql",
         "mongodb",
@@ -73,46 +122,125 @@ class Database(BaseModel):
         "weaviate",
         "milvus",
         "pulsar",
-    ]
-    description: str
+    ] = Field(
+        description="The type of database (e.g., 'postgresql', 'mongodb', 'redis')"
+    )
+    description: str = Field(
+        description="Brief description of the database and its purpose"
+    )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
+        """
+        Validate Database name format.
+
+        Args:
+            v: The Database name to validate
+
+        Returns:
+            The validated Database name
+
+        Raises:
+            ValueError: If the name doesn't match the required format
+        """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "Name must contain only lowercase letters, numbers, underscores, and hyphens"
+                "Database name must contain only lowercase letters, numbers, underscores, and hyphens. "
+                "Examples: 'main-db', 'cache_db', 'analytics'. "
+                f"Invalid name: '{v}'"
             )
         return v
 
 
 class ObjectStorageBucket(BaseModel):
-    name: str = Field(..., max_length=12)
-    policy: Literal["Private", "PublicRead", "PublicReadwrite"]
-    description: str
+    """
+    Object storage bucket configuration.
+
+    Represents a storage bucket for files, media, and other assets with
+    configurable access policies.
+    """
+
+    name: str = Field(
+        ...,
+        max_length=12,
+        description="Bucket name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'media-bucket', 'uploads', 'static-assets'",
+    )
+    policy: Literal["Private", "PublicRead", "PublicReadwrite"] = Field(
+        description="Access policy for the bucket: 'Private' (no public access), 'PublicRead' (public read access), 'PublicReadwrite' (public read/write access)"
+    )
+    description: str = Field(
+        description="Brief description of the bucket and its intended use"
+    )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
+        """
+        Validate ObjectStorageBucket name format.
+
+        Args:
+            v: The ObjectStorageBucket name to validate
+
+        Returns:
+            The validated ObjectStorageBucket name
+
+        Raises:
+            ValueError: If the name doesn't match the required format
+        """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "Name must contain only lowercase letters, numbers, underscores, and hyphens"
+                "ObjectStorageBucket name must contain only lowercase letters, numbers, underscores, and hyphens. "
+                "Examples: 'media-bucket', 'uploads', 'static-assets'. "
+                f"Invalid name: '{v}'"
             )
         return v
 
 
 class App(BaseModel):
-    name: str = Field(..., max_length=12)
-    description: str
-    image: str
-    reliances: Optional[Reliances] = None
+    """
+    Application configuration.
+
+    Represents a deployed application with a Docker image and optional
+    dependencies on other resources.
+    """
+
+    name: str = Field(
+        ...,
+        max_length=12,
+        description="Application name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'web-app', 'api_server', 'frontend'",
+    )
+    description: str = Field(
+        description="Brief description of the application and its purpose"
+    )
+    image: str = Field(
+        description="Docker image for the application (e.g., 'nginx:latest', 'node:18-alpine', 'python:3.11')"
+    )
+    reliances: Optional[Reliances] = Field(
+        default=None,
+        description="Optional dependencies on databases or storage buckets. Specify resource names that this app depends on.",
+    )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
+        """
+        Validate App name format.
+
+        Args:
+            v: The App name to validate
+
+        Returns:
+            The validated App name
+
+        Raises:
+            ValueError: If the name doesn't match the required format
+        """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "Name must contain only lowercase letters, numbers, underscores, and hyphens"
+                "App name must contain only lowercase letters, numbers, underscores, and hyphens. "
+                "Examples: 'web-app', 'api_server', 'frontend'. "
+                f"Invalid name: '{v}'"
             )
         return v
 
@@ -132,23 +260,75 @@ class App(BaseModel):
 
 
 class ProjectResources(BaseModel):
-    devbox: Optional[List[DevBox]] = None
-    database: Optional[List[Database]] = None
-    bucket: Optional[List[ObjectStorageBucket]] = None
-    app: Optional[List[App]] = None
+    """
+    Project resources configuration.
+
+    Defines all the infrastructure components needed for the project,
+    including development environments, databases, storage buckets, and applications.
+    All fields are optional and can be empty lists if not needed.
+    """
+
+    devbox: Optional[List[DevBox]] = Field(
+        default=None,
+        description="Development environment configurations. List of DevBox instances for coding and development.",
+    )
+    database: Optional[List[Database]] = Field(
+        default=None,
+        description="Database configurations. List of database instances for data storage.",
+    )
+    bucket: Optional[List[ObjectStorageBucket]] = Field(
+        default=None,
+        description="Object storage bucket configurations. List of storage buckets for media and file storage.",
+    )
+    app: Optional[List[App]] = Field(
+        default=None,
+        description="Application configurations. List of application deployments.",
+    )
 
 
 class ProjectProposal(BaseModel):
-    name: str = Field(..., max_length=12)
-    description: str = Field(..., max_length=30)
-    resources: ProjectResources
+    """
+    A structured project proposal with validated naming conventions.
+
+    This model represents a complete project proposal including the project name,
+    description, and required resources. All names must follow specific validation
+    rules to ensure compatibility with deployment systems.
+    """
+
+    name: str = Field(
+        ...,
+        max_length=12,
+        description="Project name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'my-blog', 'web_app_1', 'nextjs-site'",
+    )
+    description: str = Field(
+        ...,
+        max_length=30,
+        description="Brief project description (max 30 characters). Should be concise and descriptive.",
+    )
+    resources: ProjectResources = Field(
+        description="Required project resources including development environment, databases, storage, and applications."
+    )
 
     @field_validator("name")
     @classmethod
     def validate_name(cls, v: str) -> str:
+        """
+        Validate project name format.
+
+        Args:
+            v: The project name to validate
+
+        Returns:
+            The validated project name
+
+        Raises:
+            ValueError: If the name doesn't match the required format
+        """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "Name must contain only lowercase letters, numbers, underscores, and hyphens"
+                "Project name must contain only lowercase letters, numbers, underscores, and hyphens. "
+                "Examples: 'my-blog', 'web_app_1', 'nextjs-site'. "
+                f"Invalid name: '{v}'"
             )
         return v
 

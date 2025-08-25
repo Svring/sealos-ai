@@ -26,15 +26,13 @@ from src.graph.orca.prompts.propose_project_prompt import (
 @tool
 async def propose_project(
     requirement: str,
-    # state: Annotated[OrcaState, InjectedState],
     config: RunnableConfig,
 ) -> ProjectProposal:
     """
     Generate a structured project proposal based on user requirements.
 
     Args:
-        user_requirements: The user's project requirements and goals
-        state: The current state containing model configuration
+        requirement: The user's project requirements and goals
         config: The runnable configuration
 
     Returns:
@@ -44,23 +42,14 @@ async def propose_project(
     model = get_sealos_model()
     structured_model = model.with_structured_output(ProjectProposal)
 
-    # modified_config = copilotkit_customize_config(
-    #     config, emit_messages=False, emit_tool_calls=False
-    # )
-
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(content=PROPOSE_PROJECT_PROMPT),
-            HumanMessage(content="{input}"),
-        ]
-    )
-
-    chain = prompt | structured_model
+    # Create the message list with system prompt and requirement
+    message_list = [
+        SystemMessage(content=PROPOSE_PROJECT_PROMPT),
+        HumanMessage(content=requirement),
+    ]
 
     # Generate project plan
-    project_plan: ProjectProposal = await chain.ainvoke(
-        {"input": requirement, "agent_mode": "proposing_project"}
-    )
+    project_plan: ProjectProposal = await structured_model.ainvoke(message_list)
 
     return project_plan.model_dump()
 
@@ -88,18 +77,35 @@ async def propose_project_agent(
         },
     )
 
+    # print("messages", messages)
+
     model = get_sealos_model(model_name, base_url, api_key)
 
     # Get copilot actions and add the propose_project tool
     model_with_tools = model.bind_tools([propose_project], parallel_tool_calls=False)
 
-    print("model_with_tools", model_with_tools)
+    # print("model_with_tools", model_with_tools)
 
     # Build messages with system prompt for project proposal
-    system_message = SystemMessage(content=PROPOSE_PROJECT_REQUIREMENT_PROMPT)
+    # prompt = ChatPromptTemplate.from_messages(
+    #     [
+    #         SystemMessage(content=PROPOSE_PROJECT_REQUIREMENT_PROMPT),
+    #         HumanMessage(content="{input}"),
+    #     ]
+    # )
 
-    # Build message list
-    message_list = [system_message] + messages
+    # chain = prompt | model_with_tools
+
+    # Create the message list with system prompt and existing messages
+    message_list = [
+        SystemMessage(content=PROPOSE_PROJECT_REQUIREMENT_PROMPT),
+    ]
+
+    # Add existing messages from state
+    if messages:
+        message_list.extend(messages)
+
+    # print("message_list", message_list)
 
     # Get model response
     response = await model_with_tools.ainvoke(message_list)
@@ -108,6 +114,7 @@ async def propose_project_agent(
 
     # Check if the response contains tool calls
     if hasattr(response, "tool_calls") and response.tool_calls:
+        print("response has tool calls", response.tool_calls)
         return Command(goto="propose_tool_node", update={"messages": response})
     else:
         return Command(
