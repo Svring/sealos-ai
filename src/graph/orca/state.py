@@ -1,27 +1,66 @@
-from typing import Any, Literal, List, Optional, Dict, TypedDict
+from typing import Any, Literal, List, Optional, Union
 from copilotkit import CopilotKitState
 from pydantic import BaseModel, Field, field_validator
 import re
 
 
-class Reliances(TypedDict, total=False):
+class Port(BaseModel):
+    """
+    Port configuration for network access.
+
+    Defines a network port with its number and public access settings.
+    """
+
+    number: int = Field(
+        ...,
+        ge=1,
+        le=65535,
+        description="Port number (1-65535). Examples: 80, 3000, 8080",
+    )
+    publicAccess: bool = Field(
+        description="Whether the port should be publicly accessible from the internet"
+    )
+
+
+class Reliances(BaseModel):
     """
     Resource dependencies configuration.
 
     Defines which databases and storage buckets a resource depends on.
-    All fields are optional and can be empty lists if no dependencies exist.
+    All fields are optional and can be None if no dependencies exist.
     """
 
-    database: List[str]  # List of database names this resource depends on
-    bucket: List[str]  # List of bucket names this resource depends on
+    database: Optional[List[str]] = Field(
+        default=None, description="List of database names this resource depends on"
+    )
+    bucket: Optional[List[str]] = Field(
+        default=None, description="List of bucket names this resource depends on"
+    )
+
+
+class AppEnv(BaseModel):
+    """
+    Application environment variable configuration.
+
+    Defines an environment variable with name and value for application configuration.
+    """
+
+    name: str = Field(
+        ...,
+        description="Environment variable name. Examples: 'DATABASE_URL', 'API_KEY', 'NODE_ENV'",
+    )
+    value: str = Field(
+        ...,
+        description="Environment variable value. Examples: 'production', 'localhost:5432', 'your-api-key'",
+    )
 
 
 class DevBox(BaseModel):
     """
     Development environment configuration.
 
-    Represents a development environment with a specific runtime and optional
-    dependencies on other resources like databases or storage buckets.
+    Represents a development environment with a specific runtime, optional ports,
+    and optional dependencies on other resources like databases or storage buckets.
     """
 
     name: str = Field(
@@ -69,12 +108,13 @@ class DevBox(BaseModel):
     ] = Field(
         description="The runtime environment for development (e.g., 'Next.js', 'Python', 'React')"
     )
+    ports: Optional[List[Port]] = Field(
+        default=None,
+        description="Optional list of ports to expose for the development environment",
+    )
     reliances: Optional[Reliances] = Field(
         default=None,
         description="Optional dependencies on databases or storage buckets. Specify resource names that this DevBox depends on.",
-    )
-    description: str = Field(
-        description="Brief description of the development environment and its purpose"
     )
 
     @field_validator("name")
@@ -125,9 +165,6 @@ class Database(BaseModel):
     ] = Field(
         description="The type of database (e.g., 'postgresql', 'mongodb', 'redis')"
     )
-    description: str = Field(
-        description="Brief description of the database and its purpose"
-    )
 
     @field_validator("name")
     @classmethod
@@ -169,9 +206,6 @@ class ObjectStorageBucket(BaseModel):
     policy: Literal["Private", "PublicRead", "PublicReadwrite"] = Field(
         description="Access policy for the bucket: 'Private' (no public access), 'PublicRead' (public read access), 'PublicReadwrite' (public read/write access)"
     )
-    description: str = Field(
-        description="Brief description of the bucket and its intended use"
-    )
 
     @field_validator("name")
     @classmethod
@@ -201,8 +235,8 @@ class App(BaseModel):
     """
     Application configuration.
 
-    Represents a deployed application with a Docker image and optional
-    dependencies on other resources.
+    Represents a deployed application with a Docker image, optional ports,
+    environment variables, and optional dependencies on other resources.
     """
 
     name: str = Field(
@@ -210,11 +244,16 @@ class App(BaseModel):
         max_length=12,
         description="Application name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'web-app', 'api_server', 'frontend'",
     )
-    description: str = Field(
-        description="Brief description of the application and its purpose"
-    )
+
     image: str = Field(
         description="Docker image for the application (e.g., 'nginx:latest', 'node:18-alpine', 'python:3.11')"
+    )
+    ports: Optional[List[Port]] = Field(
+        default=None, description="Optional list of ports to expose for the application"
+    )
+    env: Optional[List[AppEnv]] = Field(
+        default=None,
+        description="Optional list of environment variables for the application",
     )
     reliances: Optional[Reliances] = Field(
         default=None,
@@ -265,7 +304,7 @@ class ProjectResources(BaseModel):
 
     Defines all the infrastructure components needed for the project,
     including development environments, databases, storage buckets, and applications.
-    All fields are optional and can be empty lists if not needed.
+    All fields are optional and can be None if not needed.
     """
 
     devbox: Optional[List[DevBox]] = Field(
@@ -300,11 +339,7 @@ class ProjectProposal(BaseModel):
         max_length=12,
         description="Project name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'my-blog', 'web_app_1', 'nextjs-site'",
     )
-    description: str = Field(
-        ...,
-        max_length=30,
-        description="Brief project description (max 30 characters). Should be concise and descriptive.",
-    )
+
     resources: ProjectResources = Field(
         description="Required project resources including development environment, databases, storage, and applications."
     )
@@ -340,8 +375,19 @@ class OrcaState(CopilotKitState):
     Inherits from CopilotKitState and adds Orca-specific fields.
     """
 
-    base_url: Optional[str] = None
-    api_key: Optional[str] = None
-    model: Optional[str] = None
+    base_url: Optional[str] = Field(
+        default=None, description="Base URL for API endpoints"
+    )
+    api_key: Optional[str] = Field(
+        default=None, description="API key for authentication"
+    )
+    model: Optional[str] = Field(
+        default=None, description="Model name to use for AI operations"
+    )
 
-    stage: Optional[Literal["propose_project", "manage_project"]] = None
+    stage: Optional[Literal["propose_project", "manage_project"]] = Field(
+        default=None, description="Current stage of the Orca workflow"
+    )
+    project_context: Optional[Any] = Field(
+        default=None, description="Context information for the current project"
+    )

@@ -26,6 +26,7 @@ from src.graph.orca.prompts.propose_project_prompt import (
 @tool
 async def propose_project(
     requirement: str,
+    state: Annotated[OrcaState, InjectedState],
     config: RunnableConfig,
 ) -> ProjectProposal:
     """
@@ -38,6 +39,21 @@ async def propose_project(
     Returns:
         ProjectProposal: A structured project proposal with name, description, and resources
     """
+    # Extract state data
+    (
+        messages,
+        base_url,
+        api_key,
+        model_name,
+    ) = get_state_values(
+        state,
+        {
+            "messages": [],
+            "base_url": None,
+            "api_key": None,
+            "model": None,
+        },
+    )
     # Get model and create structured output
     model = get_sealos_model()
     structured_model = model.with_structured_output(ProjectProposal)
@@ -45,8 +61,10 @@ async def propose_project(
     # Create the message list with system prompt and requirement
     message_list = [
         SystemMessage(content=PROPOSE_PROJECT_PROMPT),
-        HumanMessage(content=requirement),
     ]
+
+    if messages:
+        message_list.extend(messages[:-1])
 
     # Generate project plan
     project_plan: ProjectProposal = await structured_model.ainvoke(message_list)
