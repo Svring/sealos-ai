@@ -51,11 +51,11 @@ async def propose_project(
             "messages": [],
             "base_url": None,
             "api_key": None,
-            "model": None,
+            "model_name": None,
         },
     )
     # Get model and create structured output
-    model = get_sealos_model()
+    model = get_sealos_model(base_url=base_url, api_key=api_key)
     structured_model = model.with_structured_output(ProjectProposal)
 
     # Create the message list with system prompt and requirement
@@ -91,13 +91,17 @@ async def propose_project_agent(
             "messages": [],
             "base_url": None,
             "api_key": None,
-            "model": None,
+            "model_name": None,
         },
     )
 
+    print("base_url", base_url)
+    print("api_key", api_key)
+    print("model_name", model_name)
+
     # print("messages", messages)
 
-    model = get_sealos_model(model_name, base_url, api_key)
+    model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
 
     # Get copilot actions and add the propose_project tool
     model_with_tools = model.bind_tools([propose_project], parallel_tool_calls=False)

@@ -381,7 +381,7 @@ class OrcaState(CopilotKitState):
     api_key: Optional[str] = Field(
         default=None, description="API key for authentication"
     )
-    model: Optional[str] = Field(
+    model_name: Optional[str] = Field(
         default=None, description="Model name to use for AI operations"
     )
 

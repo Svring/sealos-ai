@@ -68,7 +68,7 @@ async def project_agent(
             "messages": [],
             "base_url": None,
             "api_key": None,
-            "model": None,
+            "model_name": None,
         },
     )
 

@@ -40,12 +40,12 @@ async def manage_project_agent(
             "messages": [],
             "base_url": None,
             "api_key": None,
-            "model": None,
+            "model_name": None,
             "project_context": None,
         },
     )
 
-    model = get_sealos_model(model_name, base_url, api_key)
+    model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
 
     all_tools = tools + get_copilot_actions(state)
 
@@ -57,7 +57,7 @@ async def manage_project_agent(
     # Build message list
     message_list = [system_message] + [SystemMessage(str(project_context))] + messages
 
-    print(message_list)
+    # print(message_list)
 
     # Get model response
     response = await model_with_tools.ainvoke(message_list)
