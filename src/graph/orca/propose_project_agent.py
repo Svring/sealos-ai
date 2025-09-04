@@ -54,6 +54,9 @@ async def propose_project(
             "model_name": None,
         },
     )
+    # print("base_url in propose_project tool", base_url)
+    # print("api_key in propose_project tool", api_key)
+    # print("model_name in propose_project tool", model_name)
     # Get model and create structured output
     model = get_sealos_model(base_url=base_url, api_key=api_key)
     structured_model = model.with_structured_output(ProjectProposal)
@@ -79,6 +82,7 @@ async def propose_project_agent(
     Project proposal agent based on the Sealos AI functionality.
     Handles model binding, system prompts, and tool calls.
     """
+    # print("state in propose_project_agent", state)
     # Extract state data
     (
         messages,
@@ -95,9 +99,9 @@ async def propose_project_agent(
         },
     )
 
-    print("base_url", base_url)
-    print("api_key", api_key)
-    print("model_name", model_name)
+    # print("base_url", base_url)
+    # print("api_key", api_key)
+    # print("model_name", model_name)
 
     # print("messages", messages)
 
