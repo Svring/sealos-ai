@@ -101,7 +101,7 @@
               "name": {
                 "type": "string",
                 "maxLength": 12,
-                "pattern": "^[a-z0-9_-]+$"
+                "pattern": "^[a-z0-9-]+$"
               },
               "type": {
                 "type": "string",

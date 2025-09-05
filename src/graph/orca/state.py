@@ -66,45 +66,42 @@ class DevBox(BaseModel):
     name: str = Field(
         ...,
         max_length=12,
-        description="DevBox name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'dev-env', 'frontend_dev', 'api-dev'",
+        description="DevBox name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'dev-env', 'frontend_dev', 'api-dev'",
     )
     runtime: Literal[
-        "C++",
-        "Nuxt3",
-        "Hugo",
-        "Java",
-        "Chi",
-        "PHP",
-        "Rocket",
-        "Quarkus",
-        "Debian",
-        "Ubuntu",
-        "Spring Boot",
-        "Flask",
-        "Nginx",
-        "Vue.js",
-        "Python",
-        "VitePress",
-        "Node.js",
-        "Echo",
-        "Next.js",
-        "Angular",
-        "React",
-        "Svelte",
-        "Gin",
-        "Rust",
-        "UmiJS",
-        "Docusaurus",
-        "Hexo",
-        "Vert.x",
-        "Go",
-        "C",
-        "Iris",
-        "Astro",
-        "MCP",
-        "Django",
-        "Express.js",
-        ".Net",
+        "nuxt3",
+        "angular",
+        "quarkus",
+        "ubuntu",
+        "flask",
+        "java",
+        "chi",
+        "net",
+        "iris",
+        "hexo",
+        "python",
+        "docusaurus",
+        "vitepress",
+        "cpp",
+        "vue",
+        "nginx",
+        "rocket",
+        "debian-ssh",
+        "vert.x",
+        "express.js",
+        "django",
+        "next.js",
+        "sealaf",
+        "go",
+        "react",
+        "php",
+        "svelte",
+        "c",
+        "astro",
+        "umi",
+        "gin",
+        "echo",
+        "rust",
     ] = Field(
         description="The runtime environment for development (e.g., 'Next.js', 'Python', 'React')"
     )
@@ -132,9 +129,9 @@ class DevBox(BaseModel):
         Raises:
             ValueError: If the name doesn't match the required format
         """
-        if not re.match(r"^[a-z0-9_-]+$", v):
+        if not re.match(r"^[a-z0-9-]+$", v):
             raise ValueError(
-                "DevBox name must contain only lowercase letters, numbers, underscores, and hyphens. "
+                "DevBox name must contain only lowercase letters, numbers, and hyphens. "
                 "Examples: 'dev-env', 'frontend_dev', 'api-dev'. "
                 f"Invalid name: '{v}'"
             )
@@ -151,7 +148,7 @@ class Database(BaseModel):
     name: str = Field(
         ...,
         max_length=12,
-        description="Database name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'main-db', 'cache_db', 'analytics'",
+        description="Database name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'main-db', 'cache-db', 'analytics'",
     )
     type: Literal[
         "postgresql",
@@ -181,10 +178,10 @@ class Database(BaseModel):
         Raises:
             ValueError: If the name doesn't match the required format
         """
-        if not re.match(r"^[a-z0-9_-]+$", v):
+        if not re.match(r"^[a-z0-9-]+$", v):
             raise ValueError(
-                "Database name must contain only lowercase letters, numbers, underscores, and hyphens. "
-                "Examples: 'main-db', 'cache_db', 'analytics'. "
+                "Database name must contain only lowercase letters, numbers, and hyphens. "
+                "Examples: 'main-db', 'cache-db', 'analytics'. "
                 f"Invalid name: '{v}'"
             )
         return v
@@ -201,10 +198,10 @@ class ObjectStorageBucket(BaseModel):
     name: str = Field(
         ...,
         max_length=12,
-        description="Bucket name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'media-bucket', 'uploads', 'static-assets'",
+        description="Bucket name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'media-bucket', 'uploads', 'static-assets'",
     )
-    policy: Literal["Private", "PublicRead", "PublicReadwrite"] = Field(
-        description="Access policy for the bucket: 'Private' (no public access), 'PublicRead' (public read access), 'PublicReadwrite' (public read/write access)"
+    policy: Literal["private", "publicRead", "publicReadwrite"] = Field(
+        description="Access policy for the bucket: 'private' (no public access), 'publicRead' (public read access), 'publicReadwrite' (public read/write access)"
     )
 
     @field_validator("name")
@@ -224,7 +221,7 @@ class ObjectStorageBucket(BaseModel):
         """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "ObjectStorageBucket name must contain only lowercase letters, numbers, underscores, and hyphens. "
+                "ObjectStorageBucket name must contain only lowercase letters, numbers, and hyphens. "
                 "Examples: 'media-bucket', 'uploads', 'static-assets'. "
                 f"Invalid name: '{v}'"
             )
@@ -242,7 +239,7 @@ class App(BaseModel):
     name: str = Field(
         ...,
         max_length=12,
-        description="Application name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'web-app', 'api_server', 'frontend'",
+        description="Application name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'web-app', 'api-server', 'frontend'",
     )
 
     image: str = Field(
@@ -277,8 +274,8 @@ class App(BaseModel):
         """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "App name must contain only lowercase letters, numbers, underscores, and hyphens. "
-                "Examples: 'web-app', 'api_server', 'frontend'. "
+                "App name must contain only lowercase letters, numbers, and hyphens. "
+                "Examples: 'web-app', 'api-server', 'frontend'. "
                 f"Invalid name: '{v}'"
             )
         return v
@@ -337,7 +334,7 @@ class ProjectProposal(BaseModel):
     name: str = Field(
         ...,
         max_length=12,
-        description="Project name (max 12 chars, lowercase letters, numbers, underscores, hyphens only). Examples: 'my-blog', 'web_app_1', 'nextjs-site'",
+        description="Project name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'my-blog', 'web-app-1', 'nextjs-site'",
     )
 
     resources: ProjectResources = Field(
@@ -361,8 +358,8 @@ class ProjectProposal(BaseModel):
         """
         if not re.match(r"^[a-z0-9_-]+$", v):
             raise ValueError(
-                "Project name must contain only lowercase letters, numbers, underscores, and hyphens. "
-                "Examples: 'my-blog', 'web_app_1', 'nextjs-site'. "
+                "Project name must contain only lowercase letters, numbers, and hyphens. "
+                "Examples: 'my-blog', 'web-app-1', 'nextjs-site'. "
                 f"Invalid name: '{v}'"
             )
         return v
