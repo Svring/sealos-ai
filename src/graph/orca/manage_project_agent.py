@@ -7,17 +7,22 @@ from typing import Literal
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
-from langchain_tavily import TavilySearch
 
 from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import get_state_values, get_copilot_actions
 from src.graph.orca.state import OrcaState
 from src.graph.orca.prompts.manage_project_prompt import MANAGE_PROJECT_PROMPT
+from src.graph.orca.tools.manage_project_tools import (
+    createDevbox,
+    createCluster,
+    createLaunchpad,
+    createObjectStorageBucket,
+)
+from copilotkit.langgraph import copilotkit_customize_config
 
 
 # Tools for the project management node
-tool = TavilySearch(max_results=2)
-tools = [tool]
+tools = [createDevbox, createCluster, createLaunchpad, createObjectStorageBucket]
 
 
 async def manage_project_agent(
@@ -44,6 +49,12 @@ async def manage_project_agent(
             "project_context": None,
         },
     )
+
+    # modifiedConfig = copilotkit_customize_config(
+    #     config,
+    #     emit_messages=False,  # if you want to disable message streaming
+    #     # emit_tool_calls=False,  # if you want to disable tool call streaming
+    # )
 
     model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
 

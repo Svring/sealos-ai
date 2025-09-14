@@ -382,9 +382,12 @@ class OrcaState(CopilotKitState):
         default=None, description="Model name to use for AI operations"
     )
 
-    stage: Optional[Literal["propose_project", "manage_project"]] = Field(
-        default=None, description="Current stage of the Orca workflow"
+    stage: Optional[Literal["propose_project", "manage_project", "manage_resource"]] = (
+        Field(default=None, description="Current stage of the Orca workflow")
     )
     project_context: Optional[Any] = Field(
         default=None, description="Context information for the current project"
+    )
+    resource_context: Optional[Any] = Field(
+        default=None, description="Context information for the current resource"
     )

@@ -11,9 +11,14 @@ from src.utils.context_utils import get_state_values
 from src.graph.orca.state import OrcaState
 
 
-async def entry_node(
-    state: OrcaState, config: RunnableConfig
-) -> Command[Literal["propose_project_agent", "manage_project_agent", "__end__"]]:
+async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
+    Literal[
+        "propose_project_agent",
+        "manage_project_agent",
+        "manage_resource_agent",
+        "__end__",
+    ]
+]:
     """
     Entry node that routes based on stage.
     """
@@ -30,13 +35,15 @@ async def entry_node(
         return Command(goto="propose_project_agent")
     elif stage == "manage_project":
         return Command(goto="manage_project_agent")
+    elif stage == "manage_resource":
+        return Command(goto="manage_resource_agent")
     else:
         # Default fallback
         return Command(
             goto="__end__",
             update={
                 "messages": AIMessage(
-                    content="Invalid stage. Please set stage to 'propose_project' or 'manage_project'."
+                    content="Invalid stage. Please set stage to 'propose_project', 'manage_project', or 'manage_resource'."
                 )
             },
         )
