@@ -1,7 +1,10 @@
 from typing import Any, Literal, List, Optional, Union
-from copilotkit import CopilotKitState
 from pydantic import BaseModel, Field, field_validator
 import re
+from langchain_core.messages import AnyMessage
+from langgraph.graph.message import add_messages
+from typing import Annotated
+from typing_extensions import TypedDict
 
 
 class Port(BaseModel):
@@ -365,11 +368,11 @@ class ProjectProposal(BaseModel):
         return v
 
 
-class OrcaState(CopilotKitState):
+class OrcaState(TypedDict):
     """
     Orca State
 
-    Inherits from CopilotKitState and adds Orca-specific fields.
+    Inherits from StateGraph and adds Orca-specific fields.
     """
 
     base_url: Optional[str] = Field(
@@ -381,6 +384,8 @@ class OrcaState(CopilotKitState):
     model_name: Optional[str] = Field(
         default=None, description="Model name to use for AI operations"
     )
+
+    messages: Annotated[list[AnyMessage], add_messages]
 
     stage: Optional[Literal["propose_project", "manage_project", "manage_resource"]] = (
         Field(default=None, description="Current stage of the Orca workflow")

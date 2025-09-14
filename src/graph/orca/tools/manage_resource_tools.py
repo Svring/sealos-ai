@@ -29,12 +29,12 @@ class ClusterResourceConfig(BaseModel):
 class LaunchpadResourceConfig(BaseModel):
     """Extended resource configuration for launchpads."""
 
-    replicas: Optional[int] = Field(default=None, description="Number of replicas")
+    # replicas: Optional[int] = Field(default=None, description="Number of replicas")
     cpu: Optional[float] = Field(default=None, description="CPU allocation in cores")
     memory: Optional[float] = Field(default=None, description="Memory allocation in GB")
-    hpa: Optional[str] = Field(
-        default=None, description="Horizontal Pod Autoscaler configuration"
-    )
+    # hpa: Optional[str] = Field(
+    #     default=None, description="Horizontal Pod Autoscaler configuration"
+    # )
 
 
 @tool

@@ -9,20 +9,14 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from src.provider.backbone_provider import get_sealos_model
-from src.utils.context_utils import get_state_values, get_copilot_actions
+from src.utils.context_utils import get_state_values
 from src.graph.orca.state import OrcaState
 from src.graph.orca.prompts.manage_project_prompt import MANAGE_PROJECT_PROMPT
-from src.graph.orca.tools.manage_project_tools import (
-    createDevbox,
-    createCluster,
-    createLaunchpad,
-    createObjectStorageBucket,
-)
-from copilotkit.langgraph import copilotkit_customize_config
+from src.graph.orca.tools.manage_project_tools import add_resource_to_project
 
 
 # Tools for the project management node
-tools = [createDevbox, createCluster, createLaunchpad, createObjectStorageBucket]
+tools = [add_resource_to_project]
 
 
 async def manage_project_agent(
@@ -58,7 +52,7 @@ async def manage_project_agent(
 
     model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
 
-    all_tools = tools + get_copilot_actions(state)
+    all_tools = tools
 
     model_with_tools = model.bind_tools(all_tools, parallel_tool_calls=False)
 

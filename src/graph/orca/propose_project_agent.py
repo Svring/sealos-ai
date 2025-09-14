@@ -9,7 +9,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from src.provider.backbone_provider import get_sealos_model
-from src.utils.context_utils import get_state_values
+from src.utils.context_utils import get_state_values, get_copilot_actions
 from src.graph.orca.state import OrcaState
 from src.graph.orca.tools.propose_project_tools import propose_project
 from src.graph.orca.prompts.propose_project_prompt import (
@@ -25,7 +25,6 @@ async def propose_project_agent(
     Project proposal agent based on the Sealos AI functionality.
     Handles model binding, system prompts, and tool calls.
     """
-    # print("state in propose_project_agent", state)
     # Extract state data
     (
         messages,
@@ -51,7 +50,8 @@ async def propose_project_agent(
     model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
 
     # Get copilot actions and add the propose_project tool
-    model_with_tools = model.bind_tools([propose_project], parallel_tool_calls=False)
+    all_tools = [propose_project]
+    model_with_tools = model.bind_tools(all_tools, parallel_tool_calls=False)
 
     # Create the message list with system prompt and existing messages
     message_list = [
