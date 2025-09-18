@@ -26,19 +26,58 @@ from src.graph.orca.tools.manage_resource_tools import (
 from src.graph.orca.tools.manage_resource_tool.devbox.update_devbox_tool import (
     update_devbox_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.devbox.start_devbox_tool import (
+    start_devbox_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.devbox.pause_devbox_tool import (
+    pause_devbox_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.devbox.delete_devbox_tool import (
+    delete_devbox_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.update_cluster_tool import (
+    update_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.start_cluster_tool import (
+    start_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.pause_cluster_tool import (
+    pause_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.delete_cluster_tool import (
+    delete_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_tool import (
+    update_launchpad_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.start_launchpad_tool import (
+    start_launchpad_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.pause_launchpad_tool import (
+    pause_launchpad_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool import (
+    delete_launchpad_tool,
+)
 
 
 # Tools for the resource management node
 tools = [
-    # updateDevbox,
-    # devboxLifecycle,
-    # releaseDevbox,
-    # deployDevbox,
-    # updateCluster,
-    # clusterLifecycle,
-    # updateLaunchpad,
-    # launchpadLifecycle,
+    # Devbox tools
     update_devbox_tool,
+    start_devbox_tool,
+    pause_devbox_tool,
+    delete_devbox_tool,
+    # Cluster tools
+    update_cluster_tool,
+    start_cluster_tool,
+    pause_cluster_tool,
+    delete_cluster_tool,
+    # Launchpad tools
+    update_launchpad_tool,
+    start_launchpad_tool,
+    pause_launchpad_tool,
+    delete_launchpad_tool,
 ]
 
 
