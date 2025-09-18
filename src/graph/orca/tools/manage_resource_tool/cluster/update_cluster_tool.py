@@ -38,12 +38,16 @@ async def update_cluster_tool(
     This tool should be invoked strictly for resources of kind 'cluster'.
     When referring to resources, always refer to cluster as 'database'.
 
+    IMPORTANT: All resource parameters (cpu, memory, replicas, storage) are necessary
+    for invoking this tool. When the user asks for only one resource update, the model
+    should take the current values of the other resource fields from the resource context.
+
     Args:
         cluster_name: Name of the database to update
-        cpu: CPU allocation in cores (1, 2, 4, or 8)
-        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32)
-        replicas: Number of replicas (1-20)
-        storage: Storage allocation in GB (3-300)
+        cpu: CPU allocation in cores (1, 2, 4, or 8) - REQUIRED
+        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32) - REQUIRED
+        replicas: Number of replicas (1-20) - REQUIRED
+        storage: Storage allocation in GB (3-300) - REQUIRED
 
     Returns:
         Dict containing the update operation result

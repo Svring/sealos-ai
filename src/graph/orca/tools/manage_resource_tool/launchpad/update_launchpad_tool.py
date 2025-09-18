@@ -37,10 +37,14 @@ async def update_launchpad_tool(
     This tool should be invoked strictly for resources of kind 'deployment' and 'statefulset'.
     When referring to resources, always refer to launchpad as 'app launchpad'.
 
+    IMPORTANT: Both cpu and memory parameters are necessary for invoking this tool.
+    When the user asks for only one resource update, the model should take the
+    current value of the other resource field from the resource context.
+
     Args:
         launchpad_name: Name of the app launchpad to update
-        cpu: CPU allocation in cores (1, 2, 4, 8, or 16)
-        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32)
+        cpu: CPU allocation in cores (1, 2, 4, 8, or 16) - REQUIRED
+        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32) - REQUIRED
         # replicas: Number of replicas (1-20)
 
     Returns:

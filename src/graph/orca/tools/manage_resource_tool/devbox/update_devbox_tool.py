@@ -54,10 +54,14 @@ async def update_devbox_tool(
     This tool should be invoked strictly for resources of kind 'devbox'.
     When referring to resources, always refer to devbox as 'devbox'.
 
+    IMPORTANT: Both cpu and memory parameters are necessary for invoking this tool.
+    When the user asks for only one resource update, the model should take the
+    current value of the other resource field from the resource context.
+
     Args:
         devbox_name: Name of the devbox to update
-        cpu: CPU allocation in cores (1, 2, 4, 8, or 16)
-        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32)
+        cpu: CPU allocation in cores (1, 2, 4, 8, or 16) - REQUIRED
+        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32) - REQUIRED
 
     Returns:
         Dict containing the update operation result
