@@ -2,22 +2,50 @@
 Pause a devbox instance.
 """
 
+import os
 import requests
+from dotenv import load_dotenv
 from typing import Dict, Any
-from ...utils.sealos.compose_api_url import compose_devbox_api_url
+from pydantic import BaseModel, Field
+from src.utils.sealos.compose_api_url import compose_devbox_api_url
+
+load_dotenv()
+
+
+class DevboxContext(BaseModel):
+    """Context information for devbox operations."""
+
+    kubeconfig: str = Field(
+        ..., alias="kubeconfig", description="Kubernetes configuration"
+    )
+    region_url: str = Field(
+        ..., alias="regionUrl", description="Region URL (e.g., '192.168.10.35.nip.io')"
+    )
+
+
+class DevboxPausePayload(BaseModel):
+    """Payload for pausing a devbox instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )
 
 
 def pause_devbox(
-    context: Dict[str, str],
-    payload: Dict[str, Any],
+    context: DevboxContext,
+    payload: DevboxPausePayload,
 ) -> Dict[str, Any]:
     """
     Pause a devbox instance.
 
     Args:
-        context: Dictionary containing "kubeconfig" and "region_url"
-        payload: Dictionary containing devbox identification parameters
-                (name, etc.)
+        context: DevboxContext containing kubeconfig and region_url
+        payload: DevboxPausePayload containing devbox name
 
     Returns:
         Dictionary containing the API response
@@ -25,10 +53,48 @@ def pause_devbox(
     Raises:
         requests.RequestException: If the API request fails
     """
-    region_url = context["region_url"]
+    region_url = context.region_url
     api_url = compose_devbox_api_url(region_url)
 
-    response = requests.post(f"{api_url}/devbox/pause", json=payload)
+    headers = {"Authorization": context.kubeconfig, "Content-Type": "application/json"}
+
+    # Create payload without name since it's in the URL
+    request_payload = {}
+    url = f"{api_url}/v1/devbox/{payload.name}/pause"
+
+    print(f"Making request to: {url}")
+    print(f"Payload: {request_payload}")
+
+    response = requests.post(
+        url,
+        json=request_payload,
+        headers=headers,
+        verify=False,
+    )
     response.raise_for_status()
 
-    return response.json()
+    print(response.text)
+
+    # Check if response has content before trying to parse JSON
+    if response.text.strip():
+        return response.json()
+    else:
+        return {"message": "Operation completed successfully", "status": "success"}
+
+
+# python -m src.lib.sealos.devbox.pause_devbox
+if __name__ == "__main__":
+    # Test variables
+    context = DevboxContext(
+        kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
+        regionUrl=os.getenv("BJA_REGION_URL", "192.168.10.35.nip.io"),
+    )
+
+    payload = DevboxPausePayload(name="aaaa")
+
+    # Test the function
+    try:
+        result = pause_devbox(context, payload)
+        print(result)
+    except Exception as e:
+        print(f"Error pausing devbox: {e}")

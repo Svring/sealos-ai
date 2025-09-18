@@ -9,10 +9,6 @@ from typing import Dict, Any, List, Literal, Optional
 from pydantic import BaseModel, Field
 from src.utils.sealos.compose_api_url import compose_devbox_api_url
 
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 load_dotenv()
 
 

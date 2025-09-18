@@ -1,19 +1,19 @@
 """
-Start a devbox instance.
+Start a cluster instance.
 """
 
 import os
-import requests
 from dotenv import load_dotenv
+import requests
 from typing import Dict, Any
 from pydantic import BaseModel, Field
-from src.utils.sealos.compose_api_url import compose_devbox_api_url
+from src.utils.sealos.compose_api_url import compose_cluster_api_url
 
 load_dotenv()
 
 
-class DevboxContext(BaseModel):
-    """Context information for devbox operations."""
+class ClusterContext(BaseModel):
+    """Context information for cluster operations."""
 
     kubeconfig: str = Field(
         ..., alias="kubeconfig", description="Kubernetes configuration"
@@ -23,8 +23,8 @@ class DevboxContext(BaseModel):
     )
 
 
-class DevboxStartPayload(BaseModel):
-    """Payload for starting a devbox instance."""
+class ClusterStartPayload(BaseModel):
+    """Payload for starting a cluster instance."""
 
     name: str = Field(
         ...,
@@ -32,20 +32,20 @@ class DevboxStartPayload(BaseModel):
         min_length=1,
         max_length=63,
         pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
-        description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+        description="Cluster name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
     )
 
 
-def start_devbox(
-    context: DevboxContext,
-    payload: DevboxStartPayload,
+def start_cluster(
+    context: ClusterContext,
+    payload: ClusterStartPayload,
 ) -> Dict[str, Any]:
     """
-    Start a devbox instance.
+    Start a cluster instance.
 
     Args:
-        context: DevboxContext containing kubeconfig and region_url
-        payload: DevboxStartPayload containing devbox name
+        context: ClusterContext containing kubeconfig and region_url
+        payload: ClusterStartPayload containing cluster name
 
     Returns:
         Dictionary containing the API response
@@ -54,13 +54,13 @@ def start_devbox(
         requests.RequestException: If the API request fails
     """
     region_url = context.region_url
-    api_url = compose_devbox_api_url(region_url)
+    api_url = compose_cluster_api_url(region_url)
 
     headers = {"Authorization": context.kubeconfig, "Content-Type": "application/json"}
 
     # Create payload without name since it's in the URL
     request_payload = {}
-    url = f"{api_url}/v1/devbox/{payload.name}/start"
+    url = f"{api_url}/v1/database/{payload.name}/start"
 
     print(f"Making request to: {url}")
     print(f"Payload: {request_payload}")
@@ -82,19 +82,19 @@ def start_devbox(
         return {"message": "Operation completed successfully", "status": "success"}
 
 
-# python -m src.lib.sealos.devbox.start_devbox
+# python -m src.lib.sealos.cluster.start_cluster
 if __name__ == "__main__":
     # Test variables
-    context = DevboxContext(
+    context = ClusterContext(
         kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
         regionUrl=os.getenv("BJA_REGION_URL", "192.168.10.35.nip.io"),
     )
 
-    payload = DevboxStartPayload(name="aaaa")
+    payload = ClusterStartPayload(name="test-cluster")
 
     # Test the function
     try:
-        result = start_devbox(context, payload)
+        result = start_cluster(context, payload)
         print(result)
     except Exception as e:
-        print(f"Error starting devbox: {e}")
+        print(f"Error starting cluster: {e}")
