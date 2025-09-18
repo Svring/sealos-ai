@@ -11,7 +11,7 @@ import asyncio
 @tool
 async def propose_template_deployment(template_name: str) -> Dict[str, Any]:
     """
-    Propose deployment of a template from the App Store.
+    Propose deployment of a template from the App Store. Need to be reviewed and confirmed by the user.
 
     Args:
         template_name (str): Name of the template to deploy from the App Store

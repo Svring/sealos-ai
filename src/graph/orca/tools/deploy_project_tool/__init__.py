@@ -3,11 +3,14 @@ Deploy project tools package.
 Contains all tools for project deployment operations.
 """
 
-from .web_search_tool import web_search_tool
+from .search_web import search_web
 from .search_docker_hub import search_docker_hub
 from .search_app_store import search_app_store
 from .propose_template_deployment import propose_template_deployment
-from .propose_image_deployment import propose_image_deployment
+from .propose_image_deployment import (
+    propose_image_deployment,
+    DeployDatabase as ImageDeployDatabase,
+)
 from .propose_devenv_deployment import (
     propose_devenv_deployment,
     DeployDevBox,
@@ -16,7 +19,7 @@ from .propose_devenv_deployment import (
 
 # Export all tools for easy importing
 deploy_project_tools = [
-    web_search_tool,
+    search_web,
     search_docker_hub,
     search_app_store,
     propose_template_deployment,
@@ -25,7 +28,7 @@ deploy_project_tools = [
 ]
 
 __all__ = [
-    "web_search_tool",
+    "search_web",
     "search_docker_hub",
     "search_app_store",
     "propose_template_deployment",
@@ -33,5 +36,6 @@ __all__ = [
     "propose_devenv_deployment",
     "DeployDevBox",
     "DeployDatabase",
+    "ImageDeployDatabase",
     "deploy_project_tools",
 ]

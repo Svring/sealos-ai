@@ -8,6 +8,7 @@ import requests
 import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from typing import Dict, Any
 
 
 def process_template_data(template: dict) -> dict:
@@ -79,7 +80,7 @@ def find_relevant_text_segments(
 
 
 @tool
-def search_app_store(keywords: str) -> str:
+def search_app_store(keywords: str) -> Dict[str, Any]:
     """
     Search for App Store templates using TF-IDF + Cosine Similarity to find the most relevant matches.
 
@@ -87,7 +88,7 @@ def search_app_store(keywords: str) -> str:
         keywords (str): Comma-separated keywords to search for (e.g., "nginx,web server,proxy")
 
     Returns:
-        str: A JSON string containing the top 3 most relevant templates ranked by similarity score.
+        Dict containing the action and payload with the top 3 most relevant templates ranked by similarity score.
     """
     # Get all templates from the App Store
     url = "https://template.bja.sealos.run/api/listTemplate?language=en"
@@ -118,13 +119,18 @@ def search_app_store(keywords: str) -> str:
         elif isinstance(templates_data, list):
             templates = templates_data
         else:
-            return json.dumps(
-                {"error": f"Unexpected response format: {type(templates_data)}"},
-                indent=2,
-            )
+            return {
+                "action": "search_app_store",
+                "payload": {
+                    "error": f"Unexpected response format: {type(templates_data)}"
+                },
+            }
 
         if not templates:
-            return json.dumps({"error": "No templates found"}, indent=2)
+            return {
+                "action": "search_app_store",
+                "payload": {"error": "No templates found"},
+            }
 
         # Extract text segments for similarity matching
         # Combine title, description, and categories for better matching
@@ -148,7 +154,10 @@ def search_app_store(keywords: str) -> str:
         keyword_list = [kw.strip() for kw in keywords.split(",") if kw.strip()]
 
         if not keyword_list:
-            return json.dumps({"error": "No valid keywords provided"}, indent=2)
+            return {
+                "action": "search_app_store",
+                "payload": {"error": "No valid keywords provided"},
+            }
 
         # Find most relevant templates using TF-IDF similarity
         relevant_segments = find_relevant_text_segments(
@@ -174,19 +183,25 @@ def search_app_store(keywords: str) -> str:
                     relevant_templates.append(processed_template)
                     break
 
-        return json.dumps(
-            {
+        return {
+            "action": "search_app_store",
+            "payload": {
                 "query_keywords": keyword_list,
                 "total_templates": len(templates),
                 "relevant_templates": relevant_templates,
             },
-            indent=2,
-        )
+        }
 
     except json.JSONDecodeError:
-        return json.dumps({"error": "Failed to parse App Store response"}, indent=2)
+        return {
+            "action": "search_app_store",
+            "payload": {"error": "Failed to parse App Store response"},
+        }
     except Exception as e:
-        return json.dumps({"error": f"Search failed: {str(e)}"}, indent=2)
+        return {
+            "action": "search_app_store",
+            "payload": {"error": f"Search failed: {str(e)}"},
+        }
 
 
 if __name__ == "__main__":
@@ -197,10 +212,16 @@ if __name__ == "__main__":
     try:
         result = search_app_store.invoke("fastgpt")
         print("✅ App Store search successful!")
-
-        # Print full data returned
-        print("Full data returned:")
-        print(result)
+        print(f"Action: {result['action']}")
+        print(f"Query keywords: {result['payload'].get('query_keywords', 'N/A')}")
+        print(f"Total templates: {result['payload'].get('total_templates', 'N/A')}")
+        if "relevant_templates" in result["payload"]:
+            templates = result["payload"]["relevant_templates"]
+            print(f"Relevant templates found: {len(templates)}")
+            for i, template in enumerate(templates[:2], 1):
+                print(
+                    f"  {i}. {template.get('name', 'Unknown')} (score: {template.get('similarity_score', 0):.3f})"
+                )
     except Exception as e:
         print(f"❌ App Store search failed: {e}")
 

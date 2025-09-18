@@ -110,7 +110,7 @@ async def propose_devenv_deployment(
     database: Optional[DeployDatabase] = None,
 ) -> Dict[str, Any]:
     """
-    Propose deployment of a development environment with DevBox and Database.
+    Propose deployment of a development environment with DevBox and Database. Need to be reviewed and confirmed by the user.
 
     Args:
         devbox (Optional[DeployDevBox]): DevBox configuration for development environment

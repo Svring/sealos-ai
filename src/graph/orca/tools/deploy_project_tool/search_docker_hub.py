@@ -5,10 +5,11 @@ Searches Docker Hub repositories by query string.
 
 from langchain_core.tools import tool
 import requests
+from typing import Dict, Any
 
 
 @tool
-def search_docker_hub(query: str) -> str:
+def search_docker_hub(query: str) -> Dict[str, Any]:
     """
     Search Docker Hub repositories by a given query string.
 
@@ -16,7 +17,7 @@ def search_docker_hub(query: str) -> str:
         query (str): The search term to query Docker Hub repositories.
 
     Returns:
-        str: A JSON string containing detailed information about up to 20 repositories matching the query.
+        Dict containing the action and payload with detailed repository information.
     """
     url = f"https://hub.docker.com/v2/search/repositories/?query={query}&page_size=20"
     response = requests.get(url)
@@ -40,17 +41,14 @@ def search_docker_hub(query: str) -> str:
         }
         processed_results.append(repo_info)
 
-    # Return as JSON string for better structure
-    import json
-
-    return json.dumps(
-        {
+    return {
+        "action": "search_docker_hub",
+        "payload": {
             "query": query,
             "total_results": len(processed_results),
             "repositories": processed_results,
         },
-        indent=2,
-    )
+    }
 
 
 if __name__ == "__main__":
@@ -61,7 +59,10 @@ if __name__ == "__main__":
     try:
         result = search_docker_hub.invoke("nginx")
         print("✅ Docker Hub search successful!")
-        print(result)
+        print(f"Action: {result['action']}")
+        print(f"Query: {result['payload']['query']}")
+        print(f"Total results: {result['payload']['total_results']}")
+        print(f"First repository: {result['payload']['repositories'][0]['name']}")
     except Exception as e:
         print(f"❌ Docker Hub search failed: {e}")
 
