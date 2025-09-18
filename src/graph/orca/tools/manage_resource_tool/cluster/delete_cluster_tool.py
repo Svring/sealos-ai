@@ -7,6 +7,7 @@ from typing import Dict, Any
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
+from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.cluster.cluster_model import ClusterContext
@@ -35,6 +36,27 @@ async def delete_cluster_tool(
         requests.RequestException: If the API request fails
     """
     # Extract context from state
+    approved = interrupt(
+        {
+            "action": "delete_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
+        }
+    )
+
+    # Check if the operation was approved
+    if not approved or approved == "false":
+        return {
+            "action": "delete_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
+            "success": False,
+            "error": "Operation rejected by user",
+            "message": f"Delete operation for cluster '{cluster_name}' was rejected by user",
+        }
+
     context = extract_sealos_context(state, ClusterContext)
 
     # Create payload for the cluster delete

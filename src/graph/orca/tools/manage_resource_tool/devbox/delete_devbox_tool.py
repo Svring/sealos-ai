@@ -7,6 +7,7 @@ from typing import Dict, Any
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
+from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.devbox.devbox_model import DevboxContext
@@ -35,6 +36,27 @@ async def delete_devbox_tool(
         requests.RequestException: If the API request fails
     """
     # Extract context from state
+    approved = interrupt(
+        {
+            "action": "delete_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
+        }
+    )
+
+    # Check if the operation was approved
+    if not approved or approved == "false":
+        return {
+            "action": "delete_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
+            "success": False,
+            "error": "Operation rejected by user",
+            "message": f"Delete operation for devbox '{devbox_name}' was rejected by user",
+        }
+
     context = extract_sealos_context(state, DevboxContext)
 
     # Create payload for the devbox delete

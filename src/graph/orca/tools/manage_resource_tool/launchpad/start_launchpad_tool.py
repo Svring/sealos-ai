@@ -7,6 +7,7 @@ from typing import Dict, Any
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
+from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.launchpad.launchpad_model import LaunchpadContext
@@ -35,6 +36,27 @@ async def start_launchpad_tool(
         requests.RequestException: If the API request fails
     """
     # Extract context from state
+    approved = interrupt(
+        {
+            "action": "start_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
+        }
+    )
+
+    # Check if the operation was approved
+    if not approved or approved == "false":
+        return {
+            "action": "start_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
+            "success": False,
+            "error": "Operation rejected by user",
+            "message": f"Start operation for launchpad '{launchpad_name}' was rejected by user",
+        }
+
     context = extract_sealos_context(state, LaunchpadContext)
 
     # Create payload for the launchpad start

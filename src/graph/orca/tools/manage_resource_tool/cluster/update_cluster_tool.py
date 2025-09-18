@@ -8,6 +8,7 @@ from typing_extensions import Annotated
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import InjectedState
+from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.cluster.cluster_model import (
@@ -48,6 +49,35 @@ async def update_cluster_tool(
         requests.RequestException: If the API request fails
     """
     # Extract context from state
+    approved = interrupt(
+        {
+            "action": "update_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+                "cpu": cpu,
+                "memory": memory,
+                "replicas": replicas,
+                "storage": storage,
+            },
+        }
+    )
+
+    # Check if the operation was approved
+    if not approved or approved == "false":
+        return {
+            "action": "update_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+                "cpu": cpu,
+                "memory": memory,
+                "replicas": replicas,
+                "storage": storage,
+            },
+            "success": False,
+            "error": "Operation rejected by user",
+            "message": f"Update operation for cluster '{cluster_name}' was rejected by user",
+        }
+
     context = extract_sealos_context(state, ClusterContext)
 
     # Create resource configuration only if at least one parameter is provided

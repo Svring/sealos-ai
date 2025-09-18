@@ -47,7 +47,16 @@ async def update_launchpad_tool(
         requests.RequestException: If the API request fails
     """
     # Extract context from state
-    approved = interrupt("Are you sure you want to update the launchpad?")
+    approved = interrupt(
+        {
+            "action": "update_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
+        }
+    )
 
     # Check if the operation was approved
     if not approved or approved == "false":

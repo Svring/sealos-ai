@@ -8,6 +8,7 @@ from typing_extensions import Annotated
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import InjectedState
+from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.devbox.devbox_model import (
@@ -62,6 +63,31 @@ async def update_devbox_tool(
         requests.RequestException: If the API request fails
     """
     # Extract context from state
+    approved = interrupt(
+        {
+            "action": "update_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
+        }
+    )
+
+    # Check if the operation was approved
+    if not approved or approved == "false":
+        return {
+            "action": "update_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
+            "success": False,
+            "error": "Operation rejected by user",
+            "message": f"Update operation for devbox '{devbox_name}' was rejected by user",
+        }
+
     context = extract_sealos_context(state, DevboxContext)
 
     # Create resource configuration only if at least one parameter is provided
