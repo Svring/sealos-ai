@@ -9,7 +9,7 @@ from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import InjectedState
 
-from src.utils.context_utils import get_state_values
+from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.cluster.cluster_model import (
     ClusterContext,
     ClusterUpdatePayload,
@@ -45,28 +45,8 @@ async def update_cluster_tool(
         ValueError: If required state values are missing or no resource parameters provided
         requests.RequestException: If the API request fails
     """
-    # Extract state data from config
-    (
-        region_url,
-        kubeconfig,
-    ) = get_state_values(
-        state,
-        {
-            "region_url": None,
-            "kubeconfig": None,
-        },
-    )
-
-    if not region_url:
-        raise ValueError("region_url is required in state")
-    if not kubeconfig:
-        raise ValueError("kubeconfig is required in state")
-
-    # Create context for the cluster update
-    context = ClusterContext(
-        kubeconfig=kubeconfig,
-        regionUrl=region_url,
-    )
+    # Extract context from state
+    context = extract_sealos_context(state, ClusterContext)
 
     # Create resource configuration only if at least one parameter is provided
     if (

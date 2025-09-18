@@ -9,7 +9,7 @@ from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import InjectedState
 
-from src.utils.context_utils import get_state_values
+from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.devbox.devbox_model import (
     DevboxContext,
     DevboxUpdatePayload,
@@ -60,28 +60,8 @@ async def update_devbox_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
-    # Extract state data from config
-    (
-        region_url,
-        kubeconfig,
-    ) = get_state_values(
-        state,
-        {
-            "region_url": None,
-            "kubeconfig": None,
-        },
-    )
-
-    if not region_url:
-        raise ValueError("region_url is required in state")
-    if not kubeconfig:
-        raise ValueError("kubeconfig is required in state")
-
-    # Create context for the devbox update
-    context = DevboxContext(
-        kubeconfig=kubeconfig,
-        regionUrl=region_url,
-    )
+    # Extract context from state
+    context = extract_sealos_context(state, DevboxContext)
 
     # Create resource configuration only if at least one parameter is provided
     if cpu is not None or memory is not None:

@@ -43,3 +43,42 @@ class DevboxUpdatePayload(BaseModel):
     resource: DevboxResource = Field(
         ..., alias="resource", description="Resource allocation"
     )
+
+
+class DevboxStartPayload(BaseModel):
+    """Payload for starting a devbox instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )
+
+
+class DevboxPausePayload(BaseModel):
+    """Payload for pausing a devbox instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )
+
+
+class DevboxDeletePayload(BaseModel):
+    """Payload for deleting a devbox instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )

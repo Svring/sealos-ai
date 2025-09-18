@@ -50,3 +50,42 @@ class LaunchpadUpdatePayload(BaseModel):
     resource: LaunchpadResource = Field(
         ..., alias="resource", description="Resource allocation"
     )
+
+
+class LaunchpadStartPayload(BaseModel):
+    """Payload for starting a launchpad instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Launchpad name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )
+
+
+class LaunchpadPausePayload(BaseModel):
+    """Payload for pausing a launchpad instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Launchpad name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )
+
+
+class LaunchpadDeletePayload(BaseModel):
+    """Payload for deleting a launchpad instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Launchpad name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )

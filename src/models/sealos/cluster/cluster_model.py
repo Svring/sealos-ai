@@ -121,3 +121,29 @@ class ClusterStartPayload(BaseModel):
         pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
         description="Cluster name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
     )
+
+
+class ClusterPausePayload(BaseModel):
+    """Payload for pausing a cluster instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Cluster name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )
+
+
+class ClusterDeletePayload(BaseModel):
+    """Payload for deleting a cluster instance."""
+
+    name: str = Field(
+        ...,
+        alias="name",
+        min_length=1,
+        max_length=63,
+        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+        description="Cluster name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+    )

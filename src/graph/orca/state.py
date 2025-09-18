@@ -395,7 +395,11 @@ class OrcaState(TypedDict):
 
     stage: Optional[
         Literal[
-            "propose_project", "manage_project", "manage_resource", "deploy_project"
+            "propose_project",
+            "manage_project",
+            "manage_resource",
+            "deploy_project",
+            "append",
         ]
     ] = Field(default=None, description="Current stage of the Orca workflow")
     project_context: Optional[Any] = Field(

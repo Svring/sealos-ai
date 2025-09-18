@@ -19,6 +19,7 @@ from src.graph.orca.propose_project_agent import propose_project_agent
 from src.graph.orca.tools.propose_project_tools import propose_project
 from src.graph.orca.deploy_project_agent import deploy_project_agent
 from src.graph.orca.tools.deploy_project_tool import deploy_project_tools
+from src.graph.orca.append import append_node
 
 
 def build_graph():
@@ -30,6 +31,7 @@ def build_graph():
     workflow.add_node("manage_project_agent", manage_project_agent)
     workflow.add_node("manage_resource_agent", manage_resource_agent)
     workflow.add_node("deploy_project_agent", deploy_project_agent)
+    workflow.add_node("append_node", append_node)
 
     workflow.add_node("manage_tool_node", ToolNode(tools=manage_tools))
     workflow.add_node(
