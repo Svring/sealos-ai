@@ -11,6 +11,10 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import Command, interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
+from src.utils.interrupt_utils import (
+    handle_interrupt_with_approval,
+    create_rejection_response,
+)
 from src.models.sealos.launchpad.launchpad_model import (
     LaunchpadContext,
     LaunchpadUpdatePayload,
@@ -46,31 +50,35 @@ async def update_launchpad_tool(
         ValueError: If required state values are missing or no resource parameters provided
         requests.RequestException: If the API request fails
     """
-    # Extract context from state
-    approved = interrupt(
-        {
-            "action": "update_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
-        }
+    # Handle interrupt with approval and parameter editing
+    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
+        action="update_launchpad",
+        payload={
+            "launchpad_name": launchpad_name,
+            "cpu": cpu,
+            "memory": memory,
+        },
+        interrupt_func=interrupt,
+        original_params={
+            "launchpad_name": launchpad_name,
+            "cpu": cpu,
+            "memory": memory,
+        },
     )
 
     # Check if the operation was approved
-    if not approved or approved == "false":
-        return {
-            "action": "update_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
-            "success": False,
-            "error": "Operation rejected by user",
-            "message": f"Update operation for launchpad '{launchpad_name}' was rejected by user",
-        }
+    if not is_approved:
+        return create_rejection_response(
+            action="update_launchpad",
+            response_payload=response_payload,
+            resource_name="app launchpad",
+            operation_type="Update",
+        )
+
+    # Extract the edited parameters
+    launchpad_name = edited_data.get("launchpad_name", launchpad_name)
+    cpu = edited_data.get("cpu", cpu)
+    memory = edited_data.get("memory", memory)
 
     context = extract_sealos_context(state, LaunchpadContext)
 
@@ -99,11 +107,7 @@ async def update_launchpad_tool(
 
         return {
             "action": "update_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
+            "payload": edited_data,
             "success": True,
             "result": result,
             "message": f"Successfully updated launchpad '{launchpad_name}'",
@@ -111,11 +115,7 @@ async def update_launchpad_tool(
     except Exception as e:
         return {
             "action": "update_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
+            "payload": edited_data,
             "success": False,
             "error": str(e),
             "message": f"Failed to update launchpad '{launchpad_name}': {str(e)}",

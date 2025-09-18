@@ -10,6 +10,10 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
+from src.utils.interrupt_utils import (
+    handle_interrupt_with_approval,
+    create_rejection_response,
+)
 from src.models.sealos.cluster.cluster_model import ClusterContext
 from src.lib.sealos.cluster.start_cluster import start_cluster
 from src.lib.sealos.cluster.start_cluster import ClusterStartPayload
@@ -36,27 +40,29 @@ async def start_cluster_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
-    # Extract context from state
-    approved = interrupt(
-        {
-            "action": "start_cluster",
-            "payload": {
-                "cluster_name": cluster_name,
-            },
-        }
+    # Handle interrupt with approval and parameter editing
+    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
+        action="start_cluster",
+        payload={
+            "cluster_name": cluster_name,
+        },
+        interrupt_func=interrupt,
+        original_params={
+            "cluster_name": cluster_name,
+        },
     )
 
     # Check if the operation was approved
-    if not approved or approved == "false":
-        return {
-            "action": "start_cluster",
-            "payload": {
-                "cluster_name": cluster_name,
-            },
-            "success": False,
-            "error": "Operation rejected by user",
-            "message": f"Start operation for cluster '{cluster_name}' was rejected by user",
-        }
+    if not is_approved:
+        return create_rejection_response(
+            action="start_cluster",
+            response_payload=response_payload,
+            resource_name="database",
+            operation_type="Start",
+        )
+
+    # Extract the edited parameters
+    cluster_name = edited_data.get("cluster_name", cluster_name)
 
     context = extract_sealos_context(state, ClusterContext)
 
@@ -70,9 +76,7 @@ async def start_cluster_tool(
 
         return {
             "action": "start_cluster",
-            "payload": {
-                "cluster_name": cluster_name,
-            },
+            "payload": edited_data,
             "success": True,
             "result": result,
             "message": f"Successfully started cluster '{cluster_name}'",
@@ -80,9 +84,7 @@ async def start_cluster_tool(
     except Exception as e:
         return {
             "action": "start_cluster",
-            "payload": {
-                "cluster_name": cluster_name,
-            },
+            "payload": edited_data,
             "success": False,
             "error": str(e),
             "message": f"Failed to start cluster '{cluster_name}': {str(e)}",

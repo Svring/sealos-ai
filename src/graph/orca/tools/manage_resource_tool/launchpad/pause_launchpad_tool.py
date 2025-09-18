@@ -10,6 +10,10 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
+from src.utils.interrupt_utils import (
+    handle_interrupt_with_approval,
+    create_rejection_response,
+)
 from src.models.sealos.launchpad.launchpad_model import LaunchpadContext
 from src.lib.sealos.launchpad.pause_launchpad import pause_launchpad
 
@@ -35,27 +39,29 @@ async def pause_launchpad_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
-    # Extract context from state
-    approved = interrupt(
-        {
-            "action": "pause_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-            },
-        }
+    # Handle interrupt with approval and parameter editing
+    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
+        action="pause_launchpad",
+        payload={
+            "launchpad_name": launchpad_name,
+        },
+        interrupt_func=interrupt,
+        original_params={
+            "launchpad_name": launchpad_name,
+        },
     )
 
     # Check if the operation was approved
-    if not approved or approved == "false":
-        return {
-            "action": "pause_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-            },
-            "success": False,
-            "error": "Operation rejected by user",
-            "message": f"Pause operation for launchpad '{launchpad_name}' was rejected by user",
-        }
+    if not is_approved:
+        return create_rejection_response(
+            action="pause_launchpad",
+            response_payload=response_payload,
+            resource_name="app launchpad",
+            operation_type="Pause",
+        )
+
+    # Extract the edited parameters
+    launchpad_name = edited_data.get("launchpad_name", launchpad_name)
 
     context = extract_sealos_context(state, LaunchpadContext)
 
@@ -70,9 +76,7 @@ async def pause_launchpad_tool(
 
         return {
             "action": "pause_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-            },
+            "payload": edited_data,
             "success": True,
             "result": result,
             "message": f"Successfully paused launchpad '{launchpad_name}'",
@@ -80,9 +84,7 @@ async def pause_launchpad_tool(
     except Exception as e:
         return {
             "action": "pause_launchpad",
-            "payload": {
-                "launchpad_name": launchpad_name,
-            },
+            "payload": edited_data,
             "success": False,
             "error": str(e),
             "message": f"Failed to pause launchpad '{launchpad_name}': {str(e)}",

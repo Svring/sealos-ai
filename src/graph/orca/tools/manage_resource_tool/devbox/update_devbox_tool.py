@@ -11,6 +11,10 @@ from langgraph.prebuilt import InjectedState
 from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
+from src.utils.interrupt_utils import (
+    handle_interrupt_with_approval,
+    create_rejection_response,
+)
 from src.models.sealos.devbox.devbox_model import (
     DevboxContext,
     DevboxUpdatePayload,
@@ -62,31 +66,35 @@ async def update_devbox_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
-    # Extract context from state
-    approved = interrupt(
-        {
-            "action": "update_devbox",
-            "payload": {
-                "devbox_name": devbox_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
-        }
+    # Handle interrupt with approval and parameter editing
+    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
+        action="update_devbox",
+        payload={
+            "devbox_name": devbox_name,
+            "cpu": cpu,
+            "memory": memory,
+        },
+        interrupt_func=interrupt,
+        original_params={
+            "devbox_name": devbox_name,
+            "cpu": cpu,
+            "memory": memory,
+        },
     )
 
     # Check if the operation was approved
-    if not approved or approved == "false":
-        return {
-            "action": "update_devbox",
-            "payload": {
-                "devbox_name": devbox_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
-            "success": False,
-            "error": "Operation rejected by user",
-            "message": f"Update operation for devbox '{devbox_name}' was rejected by user",
-        }
+    if not is_approved:
+        return create_rejection_response(
+            action="update_devbox",
+            response_payload=response_payload,
+            resource_name="devbox",
+            operation_type="Update",
+        )
+
+    # Extract the edited parameters
+    devbox_name = edited_data.get("devbox_name", devbox_name)
+    cpu = edited_data.get("cpu", cpu)
+    memory = edited_data.get("memory", memory)
 
     context = extract_sealos_context(state, DevboxContext)
 
@@ -115,11 +123,7 @@ async def update_devbox_tool(
 
         return {
             "action": "update_devbox",
-            "payload": {
-                "devbox_name": devbox_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
+            "payload": edited_data,
             "success": True,
             "result": result,
             "message": f"Successfully updated devbox '{devbox_name}'",
@@ -127,11 +131,7 @@ async def update_devbox_tool(
     except Exception as e:
         return {
             "action": "update_devbox",
-            "payload": {
-                "devbox_name": devbox_name,
-                "cpu": cpu,
-                "memory": memory,
-            },
+            "payload": edited_data,
             "success": False,
             "error": str(e),
             "message": f"Failed to update devbox '{devbox_name}': {str(e)}",
