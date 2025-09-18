@@ -384,6 +384,9 @@ class OrcaState(TypedDict):
     model_name: Optional[str] = Field(
         default=None, description="Model name to use for AI operations"
     )
+    region_url: Optional[str] = Field(
+        default=None, description="Region URL for API endpoints"
+    )
     kubeconfig: Optional[str] = Field(
         default=None, description="Kubeconfig for Kubernetes operations"
     )
