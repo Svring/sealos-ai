@@ -6,46 +6,14 @@ import os
 from dotenv import load_dotenv
 import requests
 from typing import Dict, Any
-from pydantic import BaseModel, Field
 from src.utils.sealos.compose_api_url import compose_launchpad_api_url
+from src.models.sealos.launchpad.launchpad_model import (
+    LaunchpadContext,
+    LaunchpadUpdatePayload,
+    LaunchpadResource,
+)
 
 load_dotenv()
-
-
-class LaunchpadResource(BaseModel):
-    """Resource allocation for launchpad."""
-
-    cpu: int = Field(..., alias="cpu", description="CPU allocation in cores")
-    memory: int = Field(..., alias="memory", description="Memory allocation in GB")
-    replicas: int = Field(..., alias="replicas", description="Number of replicas")
-
-
-class LaunchpadContext(BaseModel):
-    """Context information for launchpad operations."""
-
-    kubeconfig: str = Field(
-        ..., alias="kubeconfig", description="Kubernetes configuration"
-    )
-    region_url: str = Field(
-        ..., alias="regionUrl", description="Region URL (e.g., '192.168.10.35.nip.io')"
-    )
-
-
-class LaunchpadUpdatePayload(BaseModel):
-    """Payload for updating a launchpad instance."""
-
-    name: str = Field(
-        ...,
-        alias="name",
-        min_length=1,
-        max_length=63,
-        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
-        description="Launchpad name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
-    )
-
-    resource: LaunchpadResource = Field(
-        ..., alias="resource", description="Resource allocation"
-    )
 
 
 def update_launchpad(

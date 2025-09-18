@@ -6,47 +6,14 @@ import os
 from dotenv import load_dotenv
 import requests
 from typing import Dict, Any
-from pydantic import BaseModel, Field
 from src.utils.sealos.compose_api_url import compose_cluster_api_url
+from src.models.sealos.cluster.cluster_model import (
+    ClusterContext,
+    ClusterUpdatePayload,
+    ClusterResource,
+)
 
 load_dotenv()
-
-
-class ClusterResource(BaseModel):
-    """Resource allocation for cluster."""
-
-    cpu: int = Field(..., alias="cpu", description="CPU allocation in cores")
-    memory: int = Field(..., alias="memory", description="Memory allocation in GB")
-    replicas: int = Field(..., alias="replicas", description="Number of replicas")
-    storage: int = Field(..., alias="storage", description="Storage allocation in GB")
-
-
-class ClusterContext(BaseModel):
-    """Context information for cluster operations."""
-
-    kubeconfig: str = Field(
-        ..., alias="kubeconfig", description="Kubernetes configuration"
-    )
-    region_url: str = Field(
-        ..., alias="regionUrl", description="Region URL (e.g., '192.168.10.35.nip.io')"
-    )
-
-
-class ClusterUpdatePayload(BaseModel):
-    """Payload for updating a cluster instance."""
-
-    name: str = Field(
-        ...,
-        alias="name",
-        min_length=1,
-        max_length=63,
-        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
-        description="Cluster name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
-    )
-
-    resource: ClusterResource = Field(
-        ..., alias="resource", description="Resource allocation"
-    )
 
 
 def update_cluster(

@@ -23,17 +23,22 @@ from src.graph.orca.tools.manage_resource_tools import (
     launchpadLifecycle,
 )
 
+from src.graph.orca.tools.manage_resource_tool.devbox.update_devbox_tool import (
+    update_devbox_tool,
+)
+
 
 # Tools for the resource management node
 tools = [
-    updateDevbox,
-    devboxLifecycle,
-    releaseDevbox,
-    deployDevbox,
-    updateCluster,
-    clusterLifecycle,
-    updateLaunchpad,
-    launchpadLifecycle,
+    # updateDevbox,
+    # devboxLifecycle,
+    # releaseDevbox,
+    # deployDevbox,
+    # updateCluster,
+    # clusterLifecycle,
+    # updateLaunchpad,
+    # launchpadLifecycle,
+    update_devbox_tool,
 ]
 
 
