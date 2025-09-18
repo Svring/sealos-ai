@@ -195,25 +195,12 @@ if __name__ == "__main__":
 
     print("Testing search_app_store...")
     try:
-        result = search_app_store.invoke("nginx,web server")
+        result = search_app_store.invoke("fastgpt")
         print("✅ App Store search successful!")
 
-        # Parse and display results
-        import json
-
-        data = json.loads(result)
-        if "relevant_templates" in data:
-            templates = data["relevant_templates"]
-            print(f"Found {len(templates)} relevant templates:")
-            for i, template in enumerate(templates, 1):
-                print(
-                    f"  {i}. {template.get('name', 'Unknown')} (score: {template.get('similarity_score', 0):.3f})"
-                )
-                print(
-                    f"     Description: {template.get('description', 'No description')[:100]}..."
-                )
-        else:
-            print("Result:", result[:300] + "..." if len(result) > 300 else result)
+        # Print full data returned
+        print("Full data returned:")
+        print(result)
     except Exception as e:
         print(f"❌ App Store search failed: {e}")
 

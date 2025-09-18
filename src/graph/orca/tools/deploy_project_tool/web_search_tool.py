@@ -16,7 +16,7 @@ if __name__ == "__main__":
     try:
         result = web_search_tool.invoke("What is LangGraph?")
         print("✅ Web search successful!")
-        print(f"Result: {result[:200]}...")  # Show first 200 chars
+        print(result)
     except Exception as e:
         print(f"❌ Web search failed: {e}")
 

@@ -33,7 +33,7 @@ async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
 
     # Route based on stage
     if stage == "propose_project":
-        return Command(goto="propose_project_agent")
+        return Command(goto="deploy_project_agent")
     elif stage == "manage_project":
         return Command(goto="manage_project_agent")
     elif stage == "manage_resource":
