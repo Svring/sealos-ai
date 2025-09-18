@@ -9,21 +9,21 @@ from pydantic import BaseModel, Field, field_validator
 class ClusterResource(BaseModel):
     """Resource allocation for cluster with validation."""
 
-    cpu: Literal[1, 2, 4, 8, 16] = Field(
-        ..., alias="cpu", description="CPU allocation in cores"
+    cpu: Optional[Literal[1, 2, 4, 8]] = Field(
+        None, alias="cpu", description="CPU allocation in cores"
     )
-    memory: Literal[1, 2, 4, 8, 16, 32] = Field(
-        ..., alias="memory", description="Memory allocation in GB"
+    memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = Field(
+        None, alias="memory", description="Memory allocation in GB"
     )
-    replicas: int = Field(
-        ...,
+    replicas: Optional[int] = Field(
+        None,
         alias="replicas",
         description="Number of replicas",
         ge=1,  # Greater than or equal to 1
         le=20,  # Less than or equal to 20
     )
-    storage: int = Field(
-        ...,
+    storage: Optional[int] = Field(
+        None,
         alias="storage",
         description="Storage allocation in GB",
         ge=3,  # Greater than or equal to 3

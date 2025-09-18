@@ -10,12 +10,12 @@ from pydantic import BaseModel, Field
 from langgraph.prebuilt import InjectedState
 
 from src.utils.context_utils import get_state_values
-from src.lib.sealos.devbox.update_devbox import (
-    update_devbox,
+from src.models.sealos.devbox.devbox_model import (
     DevboxContext,
     DevboxUpdatePayload,
     DevboxResource,
 )
+from src.lib.sealos.devbox.update_devbox import update_devbox
 
 
 class UpdateDevboxInput(BaseModel):
@@ -85,11 +85,14 @@ async def update_devbox_tool(
 
     # Create resource configuration only if at least one parameter is provided
     if cpu is not None or memory is not None:
-        # Use default values if not provided
-        cpu_value = cpu if cpu is not None else 1
-        memory_value = memory if memory is not None else 1
+        # Build resource dict with only provided parameters
+        resource_dict = {}
+        if cpu is not None:
+            resource_dict["cpu"] = cpu
+        if memory is not None:
+            resource_dict["memory"] = memory
 
-        resource = DevboxResource(cpu=cpu_value, memory=memory_value)
+        resource = DevboxResource(**resource_dict)
 
         # Create payload for the devbox update
         payload = DevboxUpdatePayload(

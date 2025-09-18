@@ -5,50 +5,15 @@ Update a devbox instance configuration.
 import os
 from dotenv import load_dotenv
 import requests
-from typing import Dict, Any, Literal
-from pydantic import BaseModel, Field
+from typing import Dict, Any
 from src.utils.sealos.compose_api_url import compose_devbox_api_url
+from src.models.sealos.devbox.devbox_model import (
+    DevboxContext,
+    DevboxUpdatePayload,
+    DevboxResource,
+)
 
 load_dotenv()
-
-
-class DevboxResource(BaseModel):
-    """Resource allocation for devbox."""
-
-    cpu: Literal[1, 2, 4, 8, 16] = Field(
-        ..., alias="cpu", description="CPU allocation in cores"
-    )
-    memory: Literal[1, 2, 4, 8, 16, 32] = Field(
-        ..., alias="memory", description="Memory allocation in GB"
-    )
-
-
-class DevboxContext(BaseModel):
-    """Context information for devbox operations."""
-
-    kubeconfig: str = Field(
-        ..., alias="kubeconfig", description="Kubernetes configuration"
-    )
-    region_url: str = Field(
-        ..., alias="regionUrl", description="Region URL (e.g., '192.168.10.35.nip.io')"
-    )
-
-
-class DevboxUpdatePayload(BaseModel):
-    """Payload for updating a devbox instance."""
-
-    name: str = Field(
-        ...,
-        alias="name",
-        min_length=1,
-        max_length=63,
-        pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
-        description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
-    )
-
-    resource: DevboxResource = Field(
-        ..., alias="resource", description="Resource allocation"
-    )
 
 
 def update_devbox(

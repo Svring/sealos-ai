@@ -68,14 +68,16 @@ async def update_launchpad_tool(
 
     # Create resource configuration only if at least one parameter is provided
     if cpu is not None or memory is not None or replicas is not None:
-        # Use default values if not provided
-        cpu_value = cpu if cpu is not None else 1
-        memory_value = memory if memory is not None else 1
-        replicas_value = replicas if replicas is not None else 1
+        # Build resource dict with only provided parameters
+        resource_dict = {}
+        if cpu is not None:
+            resource_dict["cpu"] = cpu
+        if memory is not None:
+            resource_dict["memory"] = memory
+        if replicas is not None:
+            resource_dict["replicas"] = replicas
 
-        resource = LaunchpadResource(
-            cpu=cpu_value, memory=memory_value, replicas=replicas_value
-        )
+        resource = LaunchpadResource(**resource_dict)
 
         # Create payload for the launchpad update
         payload = LaunchpadUpdatePayload(

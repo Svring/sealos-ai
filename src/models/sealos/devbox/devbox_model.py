@@ -1,13 +1,13 @@
 """
-Launchpad models with validation for the Sealos launchpad operations.
+Devbox models with validation for the Sealos devbox operations.
 """
 
-from typing import Literal, Optional
+from typing import Dict, Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 
-class LaunchpadResource(BaseModel):
-    """Resource allocation for launchpad with validation."""
+class DevboxResource(BaseModel):
+    """Resource allocation for devbox with validation."""
 
     cpu: Optional[Literal[1, 2, 4, 8, 16]] = Field(
         None, alias="cpu", description="CPU allocation in cores"
@@ -15,17 +15,10 @@ class LaunchpadResource(BaseModel):
     memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = Field(
         None, alias="memory", description="Memory allocation in GB"
     )
-    replicas: Optional[int] = Field(
-        None,
-        alias="replicas",
-        description="Number of replicas",
-        ge=1,  # Greater than or equal to 1
-        le=20,  # Less than or equal to 20
-    )
 
 
-class LaunchpadContext(BaseModel):
-    """Context information for launchpad operations."""
+class DevboxContext(BaseModel):
+    """Context information for devbox operations."""
 
     kubeconfig: str = Field(
         ..., alias="kubeconfig", description="Kubernetes configuration"
@@ -35,8 +28,8 @@ class LaunchpadContext(BaseModel):
     )
 
 
-class LaunchpadUpdatePayload(BaseModel):
-    """Payload for updating a launchpad instance."""
+class DevboxUpdatePayload(BaseModel):
+    """Payload for updating a devbox instance."""
 
     name: str = Field(
         ...,
@@ -44,9 +37,9 @@ class LaunchpadUpdatePayload(BaseModel):
         min_length=1,
         max_length=63,
         pattern=r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
-        description="Launchpad name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
+        description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
     )
 
-    resource: LaunchpadResource = Field(
+    resource: DevboxResource = Field(
         ..., alias="resource", description="Resource allocation"
     )

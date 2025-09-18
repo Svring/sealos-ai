@@ -22,7 +22,7 @@ from src.lib.sealos.cluster.update_cluster import update_cluster
 async def update_cluster_tool(
     clusterName: str,
     state: Annotated[dict, InjectedState],
-    cpu: Optional[Literal[1, 2, 4, 8, 16]] = None,
+    cpu: Optional[Literal[1, 2, 4, 8]] = None,
     memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = None,
     replicas: Optional[int] = None,
     storage: Optional[int] = None,
@@ -33,7 +33,7 @@ async def update_cluster_tool(
     Args:
         clusterName: Name of the cluster to update
         state: State containing the region_url and kubeconfig
-        cpu: CPU allocation in cores (1, 2, 4, 8, or 16)
+        cpu: CPU allocation in cores (1, 2, 4, or 8)
         memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32)
         replicas: Number of replicas (1-20)
         storage: Storage allocation in GB (3-300)
@@ -75,18 +75,18 @@ async def update_cluster_tool(
         or replicas is not None
         or storage is not None
     ):
-        # Use default values if not provided
-        cpu_value = cpu if cpu is not None else 1
-        memory_value = memory if memory is not None else 1
-        replicas_value = replicas if replicas is not None else 1
-        storage_value = storage if storage is not None else 10
+        # Build resource dict with only provided parameters
+        resource_dict = {}
+        if cpu is not None:
+            resource_dict["cpu"] = cpu
+        if memory is not None:
+            resource_dict["memory"] = memory
+        if replicas is not None:
+            resource_dict["replicas"] = replicas
+        if storage is not None:
+            resource_dict["storage"] = storage
 
-        resource = ClusterResource(
-            cpu=cpu_value,
-            memory=memory_value,
-            replicas=replicas_value,
-            storage=storage_value,
-        )
+        resource = ClusterResource(**resource_dict)
 
         # Create payload for the cluster update
         payload = ClusterUpdatePayload(
