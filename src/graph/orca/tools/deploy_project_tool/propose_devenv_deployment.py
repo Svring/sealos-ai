@@ -1,0 +1,186 @@
+"""
+Development environment deployment proposal tool for deploy project operations.
+Proposes deployment of development environments with DevBox and Database.
+"""
+
+from langchain_core.tools import tool
+from typing import List, Optional, Dict, Any, Literal
+from pydantic import BaseModel, Field, field_validator
+import re
+
+
+class DeployDevBox(BaseModel):
+    """Simplified DevBox configuration for deployment."""
+
+    name: str = Field(
+        ...,
+        max_length=12,
+        description="DevBox name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'dev-env', 'frontend_dev', 'api-dev'",
+    )
+    runtime: Literal[
+        "nuxt3",
+        "angular",
+        "quarkus",
+        "ubuntu",
+        "flask",
+        "java",
+        "chi",
+        "net",
+        "iris",
+        "hexo",
+        "python",
+        "docusaurus",
+        "vitepress",
+        "cpp",
+        "vue",
+        "nginx",
+        "rocket",
+        "debian-ssh",
+        "vert.x",
+        "express.js",
+        "django",
+        "next.js",
+        "sealaf",
+        "go",
+        "react",
+        "php",
+        "svelte",
+        "c",
+        "astro",
+        "umi",
+        "gin",
+        "echo",
+        "rust",
+    ] = Field(
+        description="The runtime environment for development (e.g., 'Next.js', 'Python', 'React')"
+    )
+    ports: Optional[List[int]] = Field(
+        default=None,
+        description="Optional list of port numbers to expose for the development environment",
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if not re.match(r"^[a-z0-9-]+$", v):
+            raise ValueError(
+                "DevBox name must contain only lowercase letters, numbers, and hyphens. "
+                "Examples: 'dev-env', 'frontend_dev', 'api-dev'. "
+                f"Invalid name: '{v}'"
+            )
+        return v
+
+
+class DeployDatabase(BaseModel):
+    """Database configuration for deployment."""
+
+    name: str = Field(
+        ...,
+        max_length=12,
+        description="Database name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'main-db', 'cache-db', 'analytics'",
+    )
+    type: Literal[
+        "postgresql",
+        "mongodb",
+        "apecloud-mysql",
+        "redis",
+        "kafka",
+        "weaviate",
+        "milvus",
+        "pulsar",
+    ] = Field(
+        description="The type of database (e.g., 'postgresql', 'mongodb', 'redis')"
+    )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if not re.match(r"^[a-z0-9-]+$", v):
+            raise ValueError(
+                "Database name must contain only lowercase letters, numbers, and hyphens. "
+                "Examples: 'main-db', 'cache-db', 'analytics'. "
+                f"Invalid name: '{v}'"
+            )
+        return v
+
+
+@tool
+async def propose_devenv_deployment(
+    devbox: Optional[DeployDevBox] = None,
+    database: Optional[DeployDatabase] = None,
+) -> Dict[str, Any]:
+    """
+    Propose deployment of a development environment with DevBox and Database.
+
+    Args:
+        devbox (Optional[DeployDevBox]): DevBox configuration for development environment
+        database (Optional[DeployDatabase]): Database configuration for the development environment
+
+    Returns:
+        Dict containing the action and payload for development environment deployment
+    """
+    return {
+        "action": "propose_devenv_deployment",
+        "payload": {
+            "devbox": devbox.model_dump() if devbox else None,
+            "database": database.model_dump() if database else None,
+        },
+    }
+
+
+if __name__ == "__main__":
+    # Test the development environment deployment proposal tool
+    # Run with: python -m src.graph.orca.tools.deploy_project_tool.propose_devenv_deployment
+
+    import asyncio
+
+    async def test_devenv_deployment():
+        print("Testing propose_devenv_deployment...")
+        try:
+            # Test with both devbox and database
+            devbox = DeployDevBox(
+                name="test-dev", runtime="next.js", ports=[3000, 8080]
+            )
+            database = DeployDatabase(name="test-db", type="postgresql")
+
+            result1 = await propose_devenv_deployment.ainvoke(
+                {"devbox": devbox, "database": database}
+            )
+            print("✅ DevEnv deployment proposal (both) successful!")
+            print(f"Result: {result1}")
+
+            # Test with only devbox
+            result2 = await propose_devenv_deployment.ainvoke(
+                {"devbox": DeployDevBox(name="frontend", runtime="react", ports=[3000])}
+            )
+            print("✅ DevEnv deployment proposal (devbox only) successful!")
+            print(f"Result: {result2}")
+
+            # Test with only database
+            result3 = await propose_devenv_deployment.ainvoke(
+                {"database": DeployDatabase(name="cache-db", type="redis")}
+            )
+            print("✅ DevEnv deployment proposal (database only) successful!")
+            print(f"Result: {result3}")
+
+        except Exception as e:
+            print(f"❌ DevEnv deployment proposal failed: {e}")
+
+        print(f"Tool name: {propose_devenv_deployment.name}")
+        print(f"Tool description: {propose_devenv_deployment.description}")
+
+        # Test model validation
+        print("\nTesting model validation...")
+        try:
+            # Test valid models
+            valid_devbox = DeployDevBox(
+                name="valid-dev", runtime="python", ports=[8000]
+            )
+            valid_database = DeployDatabase(name="valid-db", type="mongodb")
+            print("✅ Model validation successful!")
+            print(f"Valid DevBox: {valid_devbox.name} ({valid_devbox.runtime})")
+            print(f"Valid Database: {valid_database.name} ({valid_database.type})")
+        except Exception as e:
+            print(f"❌ Model validation failed: {e}")
+
+    asyncio.run(test_devenv_deployment())

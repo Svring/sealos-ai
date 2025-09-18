@@ -1,11 +1,37 @@
-from langchain_tavily import TavilySearch
+"""
+App Store search tool for deploy project operations.
+Searches for App Store templates using TF-IDF + Cosine Similarity.
+"""
+
 from langchain_core.tools import tool
 import requests
 import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-web_search_tool = TavilySearch(max_results=3)
+
+def process_template_data(template: dict) -> dict:
+    """
+    Process template data to include only important fields.
+
+    Args:
+        template (dict): Raw template data from the API
+
+    Returns:
+        dict: Processed template with only important fields
+    """
+    description = (
+        template.get("spec", {}).get("i18n", {}).get("en", {}).get("description")
+        or template.get("spec", {}).get("description")
+        or "No description available"
+    )
+    processed = {
+        "name": template.get("metadata", {}).get("name", ""),
+        "gitRepo": template.get("spec", {}).get("gitRepo", ""),
+        "description": description,
+        "inputs": template.get("spec", {}).get("inputs", {}),
+    }
+    return processed
 
 
 def find_relevant_text_segments(
@@ -50,25 +76,6 @@ def find_relevant_text_segments(
     results.sort(key=lambda x: x[1], reverse=True)
 
     return results[:top_k]
-
-
-@tool
-def search_docker_hub(query: str) -> str:
-    """
-    Search Docker Hub repositories by a given query string.
-
-    Args:
-        query (str): The search term to query Docker Hub repositories.
-
-    Returns:
-        str: A newline-separated list of up to 20 repository names matching the query.
-    """
-    url = f"https://hub.docker.com/v2/search/repositories/?query={query}&page_size=20"
-    response = requests.get(url)
-    response.raise_for_status()  # Raise error for bad responses
-    results = response.json().get("results", [])
-    # Limit to a maximum of 20 results
-    return "\n".join([repo["repo_name"] for repo in results[:20]])  # Format as needed
 
 
 @tool
@@ -120,19 +127,20 @@ def search_app_store(keywords: str) -> str:
             return json.dumps({"error": "No templates found"}, indent=2)
 
         # Extract text segments for similarity matching
-        # Combine name, description, and tags for better matching
+        # Combine title, description, and categories for better matching
         text_segments = []
         for template in templates:
             segment_parts = []
-            if template.get("name"):
-                segment_parts.append(template["name"])
-            if template.get("description"):
-                segment_parts.append(template["description"])
-            if template.get("tags"):
-                if isinstance(template["tags"], list):
-                    segment_parts.extend(template["tags"])
+            spec = template.get("spec", {})
+            if spec.get("title"):
+                segment_parts.append(spec["title"])
+            if spec.get("description"):
+                segment_parts.append(spec["description"])
+            if spec.get("categories"):
+                if isinstance(spec["categories"], list):
+                    segment_parts.extend(spec["categories"])
                 else:
-                    segment_parts.append(str(template["tags"]))
+                    segment_parts.append(str(spec["categories"]))
 
             text_segments.append(" ".join(segment_parts))
 
@@ -147,26 +155,23 @@ def search_app_store(keywords: str) -> str:
             text_segments, keyword_list, top_k=3
         )
 
-        # Map back to original template data
+        # Map back to original template data and process
         relevant_templates = []
         for segment, similarity_score in relevant_segments:
             # Find the original template for this segment
             for template in templates:
                 template_text = " ".join(
                     [
-                        template.get("name", ""),
-                        template.get("description", ""),
-                        (
-                            " ".join(template.get("tags", []))
-                            if isinstance(template.get("tags"), list)
-                            else str(template.get("tags", ""))
-                        ),
+                        template.get("spec", {}).get("title", ""),
+                        template.get("spec", {}).get("description", ""),
+                        " ".join(template.get("spec", {}).get("categories", [])),
                     ]
                 )
                 if template_text.strip() == segment.strip():
-                    template_with_score = template.copy()
-                    template_with_score["similarity_score"] = float(similarity_score)
-                    relevant_templates.append(template_with_score)
+                    # Process template to include only important fields
+                    processed_template = process_template_data(template)
+                    processed_template["similarity_score"] = float(similarity_score)
+                    relevant_templates.append(processed_template)
                     break
 
         return json.dumps(
@@ -184,14 +189,33 @@ def search_app_store(keywords: str) -> str:
         return json.dumps({"error": f"Search failed: {str(e)}"}, indent=2)
 
 
-deploy_project_tools = [
-    web_search_tool,
-    search_docker_hub,
-    search_app_store,
-]
+if __name__ == "__main__":
+    # Test the App Store search tool
+    # Run with: python -m src.graph.orca.tools.deploy_project_tool.search_app_store
 
-# Example usage:
-# result = web_search_tool.invoke("What's a 'node' in LangGraph?")
-# result = search_docker_hub.invoke("nginx")
-# result = search_app_store("nginx,web server,proxy")
-# print(result)
+    print("Testing search_app_store...")
+    try:
+        result = search_app_store.invoke("nginx,web server")
+        print("✅ App Store search successful!")
+
+        # Parse and display results
+        import json
+
+        data = json.loads(result)
+        if "relevant_templates" in data:
+            templates = data["relevant_templates"]
+            print(f"Found {len(templates)} relevant templates:")
+            for i, template in enumerate(templates, 1):
+                print(
+                    f"  {i}. {template.get('name', 'Unknown')} (score: {template.get('similarity_score', 0):.3f})"
+                )
+                print(
+                    f"     Description: {template.get('description', 'No description')[:100]}..."
+                )
+        else:
+            print("Result:", result[:300] + "..." if len(result) > 300 else result)
+    except Exception as e:
+        print(f"❌ App Store search failed: {e}")
+
+    print(f"Tool name: {search_app_store.name}")
+    print(f"Tool description: {search_app_store.description}")

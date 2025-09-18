@@ -12,7 +12,7 @@ from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import get_state_values
 from src.graph.orca.state import OrcaState
 from src.graph.orca.prompts.deploy_project_prompt import DEPLOY_PROJECT_PROMPT
-from src.graph.orca.tools.deploy_project_tools import deploy_project_tools
+from src.graph.orca.tools.deploy_project_tool import deploy_project_tools
 
 
 async def deploy_project_agent(

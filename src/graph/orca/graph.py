@@ -18,7 +18,7 @@ from src.graph.orca.manage_resource_agent import (
 from src.graph.orca.propose_project_agent import propose_project_agent
 from src.graph.orca.tools.propose_project_tools import propose_project
 from src.graph.orca.deploy_project_agent import deploy_project_agent
-from src.graph.orca.tools.deploy_project_tools import deploy_project_tools
+from src.graph.orca.tools.deploy_project_tool import deploy_project_tools
 
 
 def build_graph():
