@@ -384,12 +384,17 @@ class OrcaState(TypedDict):
     model_name: Optional[str] = Field(
         default=None, description="Model name to use for AI operations"
     )
+    kubeconfig: Optional[str] = Field(
+        default=None, description="Kubeconfig for Kubernetes operations"
+    )
 
     messages: Annotated[list[AnyMessage], add_messages]
 
-    stage: Optional[Literal["propose_project", "manage_project", "manage_resource"]] = (
-        Field(default=None, description="Current stage of the Orca workflow")
-    )
+    stage: Optional[
+        Literal[
+            "propose_project", "manage_project", "manage_resource", "deploy_project"
+        ]
+    ] = Field(default=None, description="Current stage of the Orca workflow")
     project_context: Optional[Any] = Field(
         default=None, description="Context information for the current project"
     )

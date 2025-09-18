@@ -67,9 +67,11 @@ async def manage_project_agent(
     # Get model response
     response = await model_with_tools.ainvoke(message_list)
 
-    return Command(
-        goto="__end__",
-        update={
-            "messages": response,
-        },
-    )
+    # Check if the response contains tool calls
+    if hasattr(response, "tool_calls") and response.tool_calls:
+        return Command(goto="manage_tool_node", update={"messages": response})
+    else:
+        return Command(
+            goto="__end__",
+            update={"messages": response},
+        )

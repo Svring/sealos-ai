@@ -32,6 +32,11 @@ class LaunchpadResourceConfig(BaseModel):
     # replicas: Optional[int] = Field(default=None, description="Number of replicas")
     cpu: Optional[float] = Field(default=None, description="CPU allocation in cores")
     memory: Optional[float] = Field(default=None, description="Memory allocation in GB")
+    resourceType: Optional[str] = Field(
+        default=None,
+        description="Resource type for launchpad (deployment or statefulset)",
+        enum=["deployment", "statefulset"],
+    )
     # hpa: Optional[str] = Field(
     #     default=None, description="Horizontal Pod Autoscaler configuration"
     # )
@@ -180,7 +185,7 @@ async def updateLaunchpad(
 
     Args:
         launchpadName: Name of the launchpad to update
-        resource: Updated resource allocation (replicas, CPU, memory, HPA)
+        resource: Updated resource allocation (CPU, memory, resource type)
 
     Returns:
         Dict containing the update operation result

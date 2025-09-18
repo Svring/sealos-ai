@@ -16,6 +16,7 @@ async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
         "propose_project_agent",
         "manage_project_agent",
         "manage_resource_agent",
+        "deploy_project_agent",
         "__end__",
     ]
 ]:
@@ -37,13 +38,15 @@ async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
         return Command(goto="manage_project_agent")
     elif stage == "manage_resource":
         return Command(goto="manage_resource_agent")
+    elif stage == "deploy_project":
+        return Command(goto="deploy_project_agent")
     else:
         # Default fallback
         return Command(
             goto="__end__",
             update={
                 "messages": AIMessage(
-                    content="Invalid stage. Please set stage to 'propose_project', 'manage_project', or 'manage_resource'."
+                    content="Invalid stage. Please set stage to 'propose_project', 'manage_project', 'manage_resource', or 'deploy_project'."
                 )
             },
         )

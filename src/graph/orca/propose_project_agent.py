@@ -31,6 +31,7 @@ async def propose_project_agent(
         base_url,
         api_key,
         model_name,
+        kubeconfig,
     ) = get_state_values(
         state,
         {
@@ -38,8 +39,11 @@ async def propose_project_agent(
             "base_url": None,
             "api_key": None,
             "model_name": None,
+            "kubeconfig": None,
         },
     )
+
+    print("kubeconfig", kubeconfig)
 
     modifiedConfig = copilotkit_customize_config(
         config,

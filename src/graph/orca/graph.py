@@ -17,6 +17,8 @@ from src.graph.orca.manage_resource_agent import (
 )
 from src.graph.orca.propose_project_agent import propose_project_agent
 from src.graph.orca.tools.propose_project_tools import propose_project
+from src.graph.orca.deploy_project_agent import deploy_project_agent
+from src.graph.orca.tools.deploy_project_tools import deploy_project_tools
 
 
 def build_graph():
@@ -27,16 +29,21 @@ def build_graph():
     workflow.add_node("propose_project_agent", propose_project_agent)
     workflow.add_node("manage_project_agent", manage_project_agent)
     workflow.add_node("manage_resource_agent", manage_resource_agent)
+    workflow.add_node("deploy_project_agent", deploy_project_agent)
+
     workflow.add_node("manage_tool_node", ToolNode(tools=manage_tools))
     workflow.add_node(
         "manage_resource_tool_node", ToolNode(tools=manage_resource_tools)
     )
     workflow.add_node("propose_tool_node", ToolNode(tools=[propose_project]))
 
+    workflow.add_node("deploy_tool_node", ToolNode(tools=deploy_project_tools))
+
     # Add edges
     workflow.add_edge("manage_tool_node", END)
     workflow.add_edge("manage_resource_tool_node", END)
     workflow.add_edge("propose_tool_node", END)
+    workflow.add_edge("deploy_tool_node", "deploy_project_agent")
 
     # Set entry point
     workflow.set_entry_point("entry_node")
