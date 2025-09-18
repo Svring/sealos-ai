@@ -15,15 +15,17 @@ from src.lib.sealos.cluster.pause_cluster import pause_cluster
 
 @tool
 async def pause_cluster_tool(
-    clusterName: str,
+    cluster_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Pause a cluster instance.
+    Pause a database instance.
+
+    This tool should be invoked strictly for resources of kind 'cluster'.
+    When referring to resources, always refer to cluster as 'database'.
 
     Args:
-        clusterName: Name of the cluster to pause
-        state: State containing the region_url and kubeconfig
+        cluster_name: Name of the database to pause
 
     Returns:
         Dict containing the pause operation result
@@ -38,24 +40,28 @@ async def pause_cluster_tool(
     # Create payload for the cluster pause
     from src.lib.sealos.cluster.pause_cluster import ClusterPausePayload
 
-    payload = ClusterPausePayload(name=clusterName)
+    payload = ClusterPausePayload(name=cluster_name)
 
     try:
         # Call the actual pause function
         result = pause_cluster(context, payload)
 
         return {
-            "action": "pauseCluster",
+            "action": "pause_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
             "success": True,
-            "clusterName": clusterName,
             "result": result,
-            "message": f"Successfully paused cluster '{clusterName}'",
+            "message": f"Successfully paused cluster '{cluster_name}'",
         }
     except Exception as e:
         return {
-            "action": "pauseCluster",
+            "action": "pause_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
             "success": False,
-            "clusterName": clusterName,
             "error": str(e),
-            "message": f"Failed to pause cluster '{clusterName}': {str(e)}",
+            "message": f"Failed to pause cluster '{cluster_name}': {str(e)}",
         }

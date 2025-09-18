@@ -15,15 +15,17 @@ from src.lib.sealos.devbox.start_devbox import start_devbox
 
 @tool
 async def start_devbox_tool(
-    devboxName: str,
+    devbox_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
     Start a devbox instance.
 
+    This tool should be invoked strictly for resources of kind 'devbox'.
+    When referring to resources, always refer to devbox as 'devbox'.
+
     Args:
-        devboxName: Name of the devbox to start
-        state: State containing the region_url and kubeconfig
+        devbox_name: Name of the devbox to start
 
     Returns:
         Dict containing the start operation result
@@ -38,24 +40,28 @@ async def start_devbox_tool(
     # Create payload for the devbox start
     from src.lib.sealos.devbox.start_devbox import DevboxStartPayload
 
-    payload = DevboxStartPayload(name=devboxName)
+    payload = DevboxStartPayload(name=devbox_name)
 
     try:
         # Call the actual start function
         result = start_devbox(context, payload)
 
         return {
-            "action": "startDevbox",
+            "action": "start_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
             "success": True,
-            "devboxName": devboxName,
             "result": result,
-            "message": f"Successfully started devbox '{devboxName}'",
+            "message": f"Successfully started devbox '{devbox_name}'",
         }
     except Exception as e:
         return {
-            "action": "startDevbox",
+            "action": "start_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
             "success": False,
-            "devboxName": devboxName,
             "error": str(e),
-            "message": f"Failed to start devbox '{devboxName}': {str(e)}",
+            "message": f"Failed to start devbox '{devbox_name}': {str(e)}",
         }

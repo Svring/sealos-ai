@@ -15,15 +15,17 @@ from src.lib.sealos.launchpad.start_launchpad import start_launchpad
 
 @tool
 async def start_launchpad_tool(
-    launchpadName: str,
+    launchpad_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Start a launchpad instance.
+    Start an app launchpad instance.
+
+    This tool should be invoked strictly for resources of kind 'deployment' and 'statefulset'.
+    When referring to resources, always refer to launchpad as 'app launchpad'.
 
     Args:
-        launchpadName: Name of the launchpad to start
-        state: State containing the region_url and kubeconfig
+        launchpad_name: Name of the app launchpad to start
 
     Returns:
         Dict containing the start operation result
@@ -38,24 +40,28 @@ async def start_launchpad_tool(
     # Create payload for the launchpad start
     from src.lib.sealos.launchpad.start_launchpad import LaunchpadStartPayload
 
-    payload = LaunchpadStartPayload(name=launchpadName)
+    payload = LaunchpadStartPayload(name=launchpad_name)
 
     try:
         # Call the actual start function
         result = start_launchpad(context, payload)
 
         return {
-            "action": "startLaunchpad",
+            "action": "start_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
             "success": True,
-            "launchpadName": launchpadName,
             "result": result,
-            "message": f"Successfully started launchpad '{launchpadName}'",
+            "message": f"Successfully started launchpad '{launchpad_name}'",
         }
     except Exception as e:
         return {
-            "action": "startLaunchpad",
+            "action": "start_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
             "success": False,
-            "launchpadName": launchpadName,
             "error": str(e),
-            "message": f"Failed to start launchpad '{launchpadName}': {str(e)}",
+            "message": f"Failed to start launchpad '{launchpad_name}': {str(e)}",
         }

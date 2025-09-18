@@ -38,7 +38,7 @@ class UpdateDevboxInput(BaseModel):
 
 @tool
 async def update_devbox_tool(
-    devboxName: str,
+    devbox_name: str,
     state: Annotated[dict, InjectedState],
     cpu: Optional[Literal[1, 2, 4, 8, 16]] = None,
     memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = None,
@@ -46,12 +46,13 @@ async def update_devbox_tool(
     """
     Update a devbox configuration (resource allocation).
 
+    This tool should be invoked strictly for resources of kind 'devbox'.
+    When referring to resources, always refer to devbox as 'devbox'.
+
     Args:
-        devboxName: Name of the devbox to update
-        state: State containing the region_url and kubeconfig
+        devbox_name: Name of the devbox to update
         cpu: CPU allocation in cores (1, 2, 4, 8, or 16)
         memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32)
-        state: State containing the region_url and kubeconfig
 
     Returns:
         Dict containing the update operation result
@@ -76,7 +77,7 @@ async def update_devbox_tool(
 
         # Create payload for the devbox update
         payload = DevboxUpdatePayload(
-            name=devboxName,
+            name=devbox_name,
             resource=resource,
         )
     else:
@@ -87,17 +88,25 @@ async def update_devbox_tool(
         result = update_devbox(context, payload)
 
         return {
-            "action": "updateDevbox",
+            "action": "update_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
             "success": True,
-            "devboxName": devboxName,
             "result": result,
-            "message": f"Successfully updated devbox '{devboxName}'",
+            "message": f"Successfully updated devbox '{devbox_name}'",
         }
     except Exception as e:
         return {
-            "action": "updateDevbox",
+            "action": "update_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
             "success": False,
-            "devboxName": devboxName,
             "error": str(e),
-            "message": f"Failed to update devbox '{devboxName}': {str(e)}",
+            "message": f"Failed to update devbox '{devbox_name}': {str(e)}",
         }

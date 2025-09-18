@@ -3,7 +3,8 @@ Resource management node for the Orca agent.
 Handles individual resource management operations with tools and actions.
 """
 
-from typing import Literal
+import json
+from typing import Literal, List, Any
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
@@ -12,16 +13,8 @@ from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import get_state_values
 from src.graph.orca.state import OrcaState
 from src.graph.orca.prompts.manage_resource_prompt import MANAGE_RESOURCE_PROMPT
-from src.graph.orca.tools.manage_resource_tools import (
-    updateDevbox,
-    devboxLifecycle,
-    releaseDevbox,
-    deployDevbox,
-    updateCluster,
-    clusterLifecycle,
-    updateLaunchpad,
-    launchpadLifecycle,
-)
+
+# Note: Individual tool imports are used instead of the manage_resource_tools module
 
 from src.graph.orca.tools.manage_resource_tool.devbox.update_devbox_tool import (
     update_devbox_tool,
@@ -61,24 +54,78 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool i
 )
 
 
-# Tools for the resource management node
-tools = [
-    # Devbox tools
+# Tool sets for different resource types
+DEVBOX_TOOLS = [
     update_devbox_tool,
     start_devbox_tool,
     pause_devbox_tool,
     delete_devbox_tool,
-    # Cluster tools
+]
+
+CLUSTER_TOOLS = [
     update_cluster_tool,
     start_cluster_tool,
     pause_cluster_tool,
     delete_cluster_tool,
-    # Launchpad tools
+]
+
+LAUNCHPAD_TOOLS = [
     update_launchpad_tool,
     start_launchpad_tool,
     pause_launchpad_tool,
     delete_launchpad_tool,
 ]
+
+tools = [
+    *DEVBOX_TOOLS,
+    *CLUSTER_TOOLS,
+    *LAUNCHPAD_TOOLS,
+]
+
+
+def get_tools_for_resource_type(resource_context: Any) -> List[Any]:
+    """
+    Get the appropriate tools based on the resource type from resource_context.
+
+    Args:
+        resource_context: The resource context containing name, resourceType, and type fields
+
+    Returns:
+        List of tools appropriate for the resource type
+    """
+    if not resource_context:
+        # If no resource context, return all tools as fallback
+        return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS
+
+    # Try to parse resource_context if it's a string
+    if isinstance(resource_context, str):
+        try:
+            resource_context = json.loads(resource_context)
+        except (json.JSONDecodeError, TypeError):
+            # If parsing fails, return all tools as fallback
+            return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS
+
+    # Extract resourceType from the context
+    resource_type = None
+    if isinstance(resource_context, dict):
+        resource_type = resource_context.get("resourceType") or resource_context.get(
+            "resource_type"
+        )
+
+    # Map resource types to tool sets
+    if resource_type:
+        resource_type_lower = resource_type.lower()
+
+        if resource_type_lower == "devbox":
+            return DEVBOX_TOOLS
+        elif resource_type_lower == "cluster":
+            return CLUSTER_TOOLS
+        elif resource_type_lower in ["deployment", "statefulset"]:
+            # deployment and statefulset use launchpad tools
+            return LAUNCHPAD_TOOLS
+
+    # If resource type is not recognized, return all tools as fallback
+    return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS
 
 
 async def manage_resource_agent(
@@ -87,6 +134,7 @@ async def manage_resource_agent(
     """
     Resource management agent based on the Sealos AI functionality.
     Handles model binding, system prompts, Sealos context, and tool calls for individual resource management.
+    Dynamically selects tools based on the resource type from resource_context.
     """
     # Extract state data
     (
@@ -108,9 +156,10 @@ async def manage_resource_agent(
 
     model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
 
-    all_tools = tools
+    # Dynamically select tools based on resource type
+    selected_tools = get_tools_for_resource_type(resource_context)
 
-    model_with_tools = model.bind_tools(all_tools, parallel_tool_calls=False)
+    model_with_tools = model.bind_tools(selected_tools, parallel_tool_calls=False)
 
     # Build messages with system prompt for resource management
     system_message = SystemMessage(content=MANAGE_RESOURCE_PROMPT)

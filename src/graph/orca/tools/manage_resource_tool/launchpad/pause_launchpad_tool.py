@@ -15,15 +15,17 @@ from src.lib.sealos.launchpad.pause_launchpad import pause_launchpad
 
 @tool
 async def pause_launchpad_tool(
-    launchpadName: str,
+    launchpad_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Pause a launchpad instance.
+    Pause an app launchpad instance.
+
+    This tool should be invoked strictly for resources of kind 'deployment' and 'statefulset'.
+    When referring to resources, always refer to launchpad as 'app launchpad'.
 
     Args:
-        launchpadName: Name of the launchpad to pause
-        state: State containing the region_url and kubeconfig
+        launchpad_name: Name of the app launchpad to pause
 
     Returns:
         Dict containing the pause operation result
@@ -38,24 +40,28 @@ async def pause_launchpad_tool(
     # Create payload for the launchpad pause
     from src.lib.sealos.launchpad.pause_launchpad import LaunchpadPausePayload
 
-    payload = LaunchpadPausePayload(name=launchpadName)
+    payload = LaunchpadPausePayload(name=launchpad_name)
 
     try:
         # Call the actual pause function
         result = pause_launchpad(context, payload)
 
         return {
-            "action": "pauseLaunchpad",
+            "action": "pause_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
             "success": True,
-            "launchpadName": launchpadName,
             "result": result,
-            "message": f"Successfully paused launchpad '{launchpadName}'",
+            "message": f"Successfully paused launchpad '{launchpad_name}'",
         }
     except Exception as e:
         return {
-            "action": "pauseLaunchpad",
+            "action": "pause_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
             "success": False,
-            "launchpadName": launchpadName,
             "error": str(e),
-            "message": f"Failed to pause launchpad '{launchpadName}': {str(e)}",
+            "message": f"Failed to pause launchpad '{launchpad_name}': {str(e)}",
         }

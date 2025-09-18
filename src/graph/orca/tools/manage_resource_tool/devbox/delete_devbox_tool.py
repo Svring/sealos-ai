@@ -15,15 +15,17 @@ from src.lib.sealos.devbox.delete_devbox import delete_devbox
 
 @tool
 async def delete_devbox_tool(
-    devboxName: str,
+    devbox_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
     Delete a devbox instance.
 
+    This tool should be invoked strictly for resources of kind 'devbox'.
+    When referring to resources, always refer to devbox as 'devbox'.
+
     Args:
-        devboxName: Name of the devbox to delete
-        state: State containing the region_url and kubeconfig
+        devbox_name: Name of the devbox to delete
 
     Returns:
         Dict containing the delete operation result
@@ -38,24 +40,28 @@ async def delete_devbox_tool(
     # Create payload for the devbox delete
     from src.lib.sealos.devbox.delete_devbox import DevboxDeletePayload
 
-    payload = DevboxDeletePayload(name=devboxName)
+    payload = DevboxDeletePayload(name=devbox_name)
 
     try:
         # Call the actual delete function
         result = delete_devbox(context, payload)
 
         return {
-            "action": "deleteDevbox",
+            "action": "delete_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
             "success": True,
-            "devboxName": devboxName,
             "result": result,
-            "message": f"Successfully deleted devbox '{devboxName}'",
+            "message": f"Successfully deleted devbox '{devbox_name}'",
         }
     except Exception as e:
         return {
-            "action": "deleteDevbox",
+            "action": "delete_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
             "success": False,
-            "devboxName": devboxName,
             "error": str(e),
-            "message": f"Failed to delete devbox '{devboxName}': {str(e)}",
+            "message": f"Failed to delete devbox '{devbox_name}': {str(e)}",
         }

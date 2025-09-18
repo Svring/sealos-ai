@@ -15,15 +15,17 @@ from src.lib.sealos.cluster.start_cluster import start_cluster
 
 @tool
 async def start_cluster_tool(
-    clusterName: str,
+    cluster_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Start a cluster instance.
+    Start a database instance.
+
+    This tool should be invoked strictly for resources of kind 'cluster'.
+    When referring to resources, always refer to cluster as 'database'.
 
     Args:
-        clusterName: Name of the cluster to start
-        state: State containing the region_url and kubeconfig
+        cluster_name: Name of the database to start
 
     Returns:
         Dict containing the start operation result
@@ -38,24 +40,28 @@ async def start_cluster_tool(
     # Create payload for the cluster start
     from src.lib.sealos.cluster.start_cluster import ClusterStartPayload
 
-    payload = ClusterStartPayload(name=clusterName)
+    payload = ClusterStartPayload(name=cluster_name)
 
     try:
         # Call the actual start function
         result = start_cluster(context, payload)
 
         return {
-            "action": "startCluster",
+            "action": "start_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
             "success": True,
-            "clusterName": clusterName,
             "result": result,
-            "message": f"Successfully started cluster '{clusterName}'",
+            "message": f"Successfully started cluster '{cluster_name}'",
         }
     except Exception as e:
         return {
-            "action": "startCluster",
+            "action": "start_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
             "success": False,
-            "clusterName": clusterName,
             "error": str(e),
-            "message": f"Failed to start cluster '{clusterName}': {str(e)}",
+            "message": f"Failed to start cluster '{cluster_name}': {str(e)}",
         }

@@ -17,7 +17,7 @@ from src.graph.orca.tools.deploy_project_tool import deploy_project_tools
 
 async def deploy_project_agent(
     state: OrcaState, config: RunnableConfig
-) -> Command[Literal["deploy_tool_node", "__end__"]]:
+) -> Command[Literal["deploy_project_tool_node", "__end__"]]:
     """
     Project deployment agent based on the Sealos AI functionality.
     Handles model binding, system prompts, and deployment tool calls.
@@ -57,7 +57,7 @@ async def deploy_project_agent(
 
     # Check if the response contains tool calls
     if hasattr(response, "tool_calls") and response.tool_calls:
-        return Command(goto="deploy_tool_node", update={"messages": response})
+        return Command(goto="deploy_project_tool_node", update={"messages": response})
     else:
         return Command(
             goto="__end__",

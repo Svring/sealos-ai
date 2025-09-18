@@ -15,15 +15,17 @@ from src.lib.sealos.devbox.pause_devbox import pause_devbox
 
 @tool
 async def pause_devbox_tool(
-    devboxName: str,
+    devbox_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
     Pause a devbox instance.
 
+    This tool should be invoked strictly for resources of kind 'devbox'.
+    When referring to resources, always refer to devbox as 'devbox'.
+
     Args:
-        devboxName: Name of the devbox to pause
-        state: State containing the region_url and kubeconfig
+        devbox_name: Name of the devbox to pause
 
     Returns:
         Dict containing the pause operation result
@@ -38,24 +40,28 @@ async def pause_devbox_tool(
     # Create payload for the devbox pause
     from src.lib.sealos.devbox.pause_devbox import DevboxPausePayload
 
-    payload = DevboxPausePayload(name=devboxName)
+    payload = DevboxPausePayload(name=devbox_name)
 
     try:
         # Call the actual pause function
         result = pause_devbox(context, payload)
 
         return {
-            "action": "pauseDevbox",
+            "action": "pause_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
             "success": True,
-            "devboxName": devboxName,
             "result": result,
-            "message": f"Successfully paused devbox '{devboxName}'",
+            "message": f"Successfully paused devbox '{devbox_name}'",
         }
     except Exception as e:
         return {
-            "action": "pauseDevbox",
+            "action": "pause_devbox",
+            "payload": {
+                "devbox_name": devbox_name,
+            },
             "success": False,
-            "devboxName": devboxName,
             "error": str(e),
-            "message": f"Failed to pause devbox '{devboxName}': {str(e)}",
+            "message": f"Failed to pause devbox '{devbox_name}': {str(e)}",
         }

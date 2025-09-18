@@ -15,15 +15,17 @@ from src.lib.sealos.cluster.delete_cluster import delete_cluster
 
 @tool
 async def delete_cluster_tool(
-    clusterName: str,
+    cluster_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Delete a cluster instance.
+    Delete a database instance.
+
+    This tool should be invoked strictly for resources of kind 'cluster'.
+    When referring to resources, always refer to cluster as 'database'.
 
     Args:
-        clusterName: Name of the cluster to delete
-        state: State containing the region_url and kubeconfig
+        cluster_name: Name of the database to delete
 
     Returns:
         Dict containing the delete operation result
@@ -38,24 +40,28 @@ async def delete_cluster_tool(
     # Create payload for the cluster delete
     from src.lib.sealos.cluster.delete_cluster import ClusterDeletePayload
 
-    payload = ClusterDeletePayload(name=clusterName)
+    payload = ClusterDeletePayload(name=cluster_name)
 
     try:
         # Call the actual delete function
         result = delete_cluster(context, payload)
 
         return {
-            "action": "deleteCluster",
+            "action": "delete_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
             "success": True,
-            "clusterName": clusterName,
             "result": result,
-            "message": f"Successfully deleted cluster '{clusterName}'",
+            "message": f"Successfully deleted cluster '{cluster_name}'",
         }
     except Exception as e:
         return {
-            "action": "deleteCluster",
+            "action": "delete_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+            },
             "success": False,
-            "clusterName": clusterName,
             "error": str(e),
-            "message": f"Failed to delete cluster '{clusterName}': {str(e)}",
+            "message": f"Failed to delete cluster '{cluster_name}': {str(e)}",
         }

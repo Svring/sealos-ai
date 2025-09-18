@@ -20,7 +20,7 @@ from src.lib.sealos.cluster.update_cluster import update_cluster
 
 @tool
 async def update_cluster_tool(
-    clusterName: str,
+    cluster_name: str,
     state: Annotated[dict, InjectedState],
     cpu: Optional[Literal[1, 2, 4, 8]] = None,
     memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = None,
@@ -28,11 +28,13 @@ async def update_cluster_tool(
     storage: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
-    Update a cluster configuration (resource allocation).
+    Update a database configuration (resource allocation).
+
+    This tool should be invoked strictly for resources of kind 'cluster'.
+    When referring to resources, always refer to cluster as 'database'.
 
     Args:
-        clusterName: Name of the cluster to update
-        state: State containing the region_url and kubeconfig
+        cluster_name: Name of the database to update
         cpu: CPU allocation in cores (1, 2, 4, or 8)
         memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32)
         replicas: Number of replicas (1-20)
@@ -70,7 +72,7 @@ async def update_cluster_tool(
 
         # Create payload for the cluster update
         payload = ClusterUpdatePayload(
-            name=clusterName,
+            name=cluster_name,
             resource=resource,
         )
     else:
@@ -83,17 +85,29 @@ async def update_cluster_tool(
         result = update_cluster(context, payload)
 
         return {
-            "action": "updateCluster",
+            "action": "update_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+                "cpu": cpu,
+                "memory": memory,
+                "replicas": replicas,
+                "storage": storage,
+            },
             "success": True,
-            "clusterName": clusterName,
             "result": result,
-            "message": f"Successfully updated cluster '{clusterName}'",
+            "message": f"Successfully updated cluster '{cluster_name}'",
         }
     except Exception as e:
         return {
-            "action": "updateCluster",
+            "action": "update_cluster",
+            "payload": {
+                "cluster_name": cluster_name,
+                "cpu": cpu,
+                "memory": memory,
+                "replicas": replicas,
+                "storage": storage,
+            },
             "success": False,
-            "clusterName": clusterName,
             "error": str(e),
-            "message": f"Failed to update cluster '{clusterName}': {str(e)}",
+            "message": f"Failed to update cluster '{cluster_name}': {str(e)}",
         }

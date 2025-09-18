@@ -15,15 +15,17 @@ from src.lib.sealos.launchpad.delete_launchpad import delete_launchpad
 
 @tool
 async def delete_launchpad_tool(
-    launchpadName: str,
+    launchpad_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Delete a launchpad instance.
+    Delete an app launchpad instance.
+
+    This tool should be invoked strictly for resources of kind 'deployment' and 'statefulset'.
+    When referring to resources, always refer to launchpad as 'app launchpad'.
 
     Args:
-        launchpadName: Name of the launchpad to delete
-        state: State containing the region_url and kubeconfig
+        launchpad_name: Name of the app launchpad to delete
 
     Returns:
         Dict containing the delete operation result
@@ -38,24 +40,28 @@ async def delete_launchpad_tool(
     # Create payload for the launchpad delete
     from src.lib.sealos.launchpad.delete_launchpad import LaunchpadDeletePayload
 
-    payload = LaunchpadDeletePayload(name=launchpadName)
+    payload = LaunchpadDeletePayload(name=launchpad_name)
 
     try:
         # Call the actual delete function
         result = delete_launchpad(context, payload)
 
         return {
-            "action": "deleteLaunchpad",
+            "action": "delete_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
             "success": True,
-            "launchpadName": launchpadName,
             "result": result,
-            "message": f"Successfully deleted launchpad '{launchpadName}'",
+            "message": f"Successfully deleted launchpad '{launchpad_name}'",
         }
     except Exception as e:
         return {
-            "action": "deleteLaunchpad",
+            "action": "delete_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+            },
             "success": False,
-            "launchpadName": launchpadName,
             "error": str(e),
-            "message": f"Failed to delete launchpad '{launchpadName}': {str(e)}",
+            "message": f"Failed to delete launchpad '{launchpad_name}': {str(e)}",
         }

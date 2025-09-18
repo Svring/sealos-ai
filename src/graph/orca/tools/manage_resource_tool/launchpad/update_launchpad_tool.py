@@ -8,6 +8,7 @@ from typing_extensions import Annotated
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import InjectedState
+from langgraph.types import Command, interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.models.sealos.launchpad.launchpad_model import (
@@ -20,18 +21,20 @@ from src.lib.sealos.launchpad.update_launchpad import update_launchpad
 
 @tool
 async def update_launchpad_tool(
-    launchpadName: str,
+    launchpad_name: str,
     state: Annotated[dict, InjectedState],
     cpu: Optional[Literal[1, 2, 4, 8, 16]] = None,
     memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = None,
     # replicas: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
-    Update a launchpad configuration (resource allocation).
+    Update an app launchpad configuration (resource allocation).
+
+    This tool should be invoked strictly for resources of kind 'deployment' and 'statefulset'.
+    When referring to resources, always refer to launchpad as 'app launchpad'.
 
     Args:
-        launchpadName: Name of the launchpad to update
-        state: State containing the region_url and kubeconfig
+        launchpad_name: Name of the app launchpad to update
         cpu: CPU allocation in cores (1, 2, 4, 8, or 16)
         memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32)
         # replicas: Number of replicas (1-20)
@@ -44,6 +47,22 @@ async def update_launchpad_tool(
         requests.RequestException: If the API request fails
     """
     # Extract context from state
+    approved = interrupt("Are you sure you want to update the launchpad?")
+
+    # Check if the operation was approved
+    if not approved or approved == "false":
+        return {
+            "action": "update_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
+            "success": False,
+            "error": "Operation rejected by user",
+            "message": f"Update operation for launchpad '{launchpad_name}' was rejected by user",
+        }
+
     context = extract_sealos_context(state, LaunchpadContext)
 
     # Create resource configuration only if at least one parameter is provided
@@ -59,7 +78,7 @@ async def update_launchpad_tool(
 
         # Create payload for the launchpad update
         payload = LaunchpadUpdatePayload(
-            name=launchpadName,
+            name=launchpad_name,
             resource=resource,
         )
     else:
@@ -70,17 +89,25 @@ async def update_launchpad_tool(
         result = update_launchpad(context, payload)
 
         return {
-            "action": "updateLaunchpad",
+            "action": "update_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
             "success": True,
-            "launchpadName": launchpadName,
             "result": result,
-            "message": f"Successfully updated launchpad '{launchpadName}'",
+            "message": f"Successfully updated launchpad '{launchpad_name}'",
         }
     except Exception as e:
         return {
-            "action": "updateLaunchpad",
+            "action": "update_launchpad",
+            "payload": {
+                "launchpad_name": launchpad_name,
+                "cpu": cpu,
+                "memory": memory,
+            },
             "success": False,
-            "launchpadName": launchpadName,
             "error": str(e),
-            "message": f"Failed to update launchpad '{launchpadName}': {str(e)}",
+            "message": f"Failed to update launchpad '{launchpad_name}': {str(e)}",
         }

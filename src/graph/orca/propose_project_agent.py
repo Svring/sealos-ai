@@ -20,7 +20,7 @@ from copilotkit.langgraph import copilotkit_customize_config
 
 async def propose_project_agent(
     state: OrcaState, config: RunnableConfig
-) -> Command[Literal["propose_tool_node", "__end__"]]:
+) -> Command[Literal["propose_project_tool_node", "__end__"]]:
     """
     Project proposal agent based on the Sealos AI functionality.
     Handles model binding, system prompts, and tool calls.
@@ -71,7 +71,7 @@ async def propose_project_agent(
 
     # Check if the response contains tool calls
     if hasattr(response, "tool_calls") and response.tool_calls:
-        return Command(goto="propose_tool_node", update={"messages": response})
+        return Command(goto="propose_project_tool_node", update={"messages": response})
     else:
         return Command(
             goto="__end__",

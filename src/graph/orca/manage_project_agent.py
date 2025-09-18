@@ -21,7 +21,7 @@ tools = [add_resource_to_project]
 
 async def manage_project_agent(
     state: OrcaState, config: RunnableConfig
-) -> Command[Literal["manage_tool_node", "__end__"]]:
+) -> Command[Literal["manage_project_tool_node", "__end__"]]:
     """
     Project management agent based on the Sealos AI functionality.
     Handles model binding, system prompts, Sealos context, and tool calls.
@@ -69,7 +69,7 @@ async def manage_project_agent(
 
     # Check if the response contains tool calls
     if hasattr(response, "tool_calls") and response.tool_calls:
-        return Command(goto="manage_tool_node", update={"messages": response})
+        return Command(goto="manage_project_tool_node", update={"messages": response})
     else:
         return Command(
             goto="__end__",
