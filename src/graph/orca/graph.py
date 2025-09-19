@@ -27,7 +27,7 @@ def build_graph():
 
     # Add nodes
     workflow.add_node("entry_node", entry_node)
-    workflow.add_node("propose_project_agent", propose_project_agent)
+    # workflow.add_node("propose_project_agent", propose_project_agent)
     workflow.add_node("manage_project_agent", manage_project_agent)
     workflow.add_node("manage_resource_agent", manage_resource_agent)
     workflow.add_node("deploy_project_agent", deploy_project_agent)
@@ -44,7 +44,7 @@ def build_graph():
     # Add edges
     workflow.add_edge("manage_project_tool_node", "manage_project_agent")
     workflow.add_edge("manage_resource_tool_node", "manage_resource_agent")
-    workflow.add_edge("propose_project_tool_node", "propose_project_agent")
+    # workflow.add_edge("propose_project_tool_node", "propose_project_agent")
     workflow.add_edge("deploy_project_tool_node", "deploy_project_agent")
 
     # Set entry point

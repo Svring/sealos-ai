@@ -3,16 +3,23 @@ Project deployment node for the Orca agent.
 Handles project deployment operations with tools and actions.
 """
 
+import os
 from typing import Literal
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
+from dotenv import load_dotenv
 
 from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import get_state_values
 from src.graph.orca.state import OrcaState
 from src.graph.orca.prompts.deploy_project_prompt import DEPLOY_PROJECT_PROMPT
-from src.graph.orca.tools.deploy_project_tool import deploy_project_tools
+from src.graph.orca.tools.deploy_project_tool import (
+    deploy_project_tools,
+    search_docker_hub,
+)
+
+load_dotenv()
 
 
 async def deploy_project_agent(
@@ -40,7 +47,18 @@ async def deploy_project_agent(
 
     model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
 
-    model_with_tools = model.bind_tools(deploy_project_tools)
+    # Filter tools based on OVERSEA environment variable
+    # If OVERSEA=true, include search_docker_hub; otherwise, exclude it
+    available_tools = deploy_project_tools.copy()
+    oversea_enabled = os.getenv("OVERSEA", "").lower() == "true"
+
+    if not oversea_enabled:
+        # Remove search_docker_hub from available tools
+        available_tools = [
+            tool for tool in available_tools if tool != search_docker_hub
+        ]
+
+    model_with_tools = model.bind_tools(available_tools)
 
     # Build system message for project deployment
     system_message = SystemMessage(content=DEPLOY_PROJECT_PROMPT)

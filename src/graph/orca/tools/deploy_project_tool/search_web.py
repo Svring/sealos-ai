@@ -30,7 +30,7 @@ def search_web(query: str) -> Dict[str, Any]:
 
 if __name__ == "__main__":
     # Test the web search tool
-    # Run with: python -m src.graph.orca.tools.deploy_project_tool.web_search_tool
+    # Run with: python -m src.graph.orca.tools.deploy_project_tool.search_web
 
     print("Testing web_search_tool...")
     try:

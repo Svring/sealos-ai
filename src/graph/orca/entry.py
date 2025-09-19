@@ -13,7 +13,7 @@ from src.graph.orca.state import OrcaState
 
 async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
     Literal[
-        "propose_project_agent",
+        # "propose_project_agent",
         "manage_project_agent",
         "manage_resource_agent",
         "deploy_project_agent",
