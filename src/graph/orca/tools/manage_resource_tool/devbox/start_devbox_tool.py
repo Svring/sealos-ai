@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.devbox.devbox_model import DevboxContext
-from src.lib.sealos.devbox.start_devbox import start_devbox
+from src.lib.brain.sealos.devbox.lifecycle import (
+    devbox_lifecycle,
+    BrainDevboxContext,
+    DevboxLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def start_devbox_tool(
 
     context = extract_sealos_context(state, DevboxContext)
 
-    # Create payload for the devbox start
-    from src.lib.sealos.devbox.start_devbox import DevboxStartPayload
+    # Convert to brain context
+    brain_context = BrainDevboxContext(kubeconfig=context.kubeconfig)
 
-    payload = DevboxStartPayload(name=devbox_name)
+    # Create lifecycle action
+    action = DevboxLifecycleAction(action="start")
 
     try:
-        # Call the actual start function
-        result = start_devbox(context, payload)
+        # Call the brain API function
+        result = devbox_lifecycle(brain_context, devbox_name, action)
 
         return {
             "action": "start_devbox",

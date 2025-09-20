@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.launchpad.launchpad_model import LaunchpadContext
-from src.lib.sealos.launchpad.start_launchpad import start_launchpad
+from src.lib.brain.sealos.launchpad.lifecycle import (
+    launchpad_lifecycle,
+    BrainLaunchpadContext,
+    LaunchpadLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def start_launchpad_tool(
 
     context = extract_sealos_context(state, LaunchpadContext)
 
-    # Create payload for the launchpad start
-    from src.lib.sealos.launchpad.start_launchpad import LaunchpadStartPayload
+    # Convert to brain context
+    brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
-    payload = LaunchpadStartPayload(name=launchpad_name)
+    # Create lifecycle action
+    action = LaunchpadLifecycleAction(action="start")
 
     try:
-        # Call the actual start function
-        result = start_launchpad(context, payload)
+        # Call the brain API function
+        result = launchpad_lifecycle(brain_context, launchpad_name, action)
 
         return {
             "action": "start_launchpad",

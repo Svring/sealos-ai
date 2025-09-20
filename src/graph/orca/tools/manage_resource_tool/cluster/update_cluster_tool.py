@@ -20,7 +20,11 @@ from src.models.sealos.cluster.cluster_model import (
     ClusterUpdatePayload,
     ClusterResource,
 )
-from src.lib.sealos.cluster.update_cluster import update_cluster
+from src.lib.brain.sealos.cluster.update import (
+    update_cluster,
+    BrainClusterContext,
+    ClusterUpdateData,
+)
 
 
 @tool
@@ -94,39 +98,19 @@ async def update_cluster_tool(
 
     context = extract_sealos_context(state, ClusterContext)
 
-    # Create resource configuration only if at least one parameter is provided
-    if (
-        cpu is not None
-        or memory is not None
-        or replicas is not None
-        or storage is not None
-    ):
-        # Build resource dict with only provided parameters
-        resource_dict = {}
-        if cpu is not None:
-            resource_dict["cpu"] = cpu
-        if memory is not None:
-            resource_dict["memory"] = memory
-        if replicas is not None:
-            resource_dict["replicas"] = replicas
-        if storage is not None:
-            resource_dict["storage"] = storage
+    # Convert to brain context
+    brain_context = BrainClusterContext(kubeconfig=context.kubeconfig)
 
-        resource = ClusterResource(**resource_dict)
-
-        # Create payload for the cluster update
-        payload = ClusterUpdatePayload(
-            name=cluster_name,
-            resource=resource,
-        )
-    else:
-        raise ValueError(
-            "At least one of cpu, memory, replicas, or storage must be provided"
-        )
+    # Create update data
+    update_data = ClusterUpdateData(
+        name=cluster_name,
+        cpu=cpu,
+        memory=memory,
+    )
 
     try:
-        # Call the actual update function
-        result = update_cluster(context, payload)
+        # Call the brain API function
+        result = update_cluster(brain_context, update_data)
 
         return {
             "action": "update_cluster",

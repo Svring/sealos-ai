@@ -15,8 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.cluster.cluster_model import ClusterContext
-from src.lib.sealos.cluster.start_cluster import start_cluster
-from src.lib.sealos.cluster.start_cluster import ClusterStartPayload
+from src.lib.brain.sealos.cluster.lifecycle import (
+    cluster_lifecycle,
+    BrainClusterContext,
+    ClusterLifecycleAction,
+)
 
 
 @tool
@@ -66,13 +69,15 @@ async def start_cluster_tool(
 
     context = extract_sealos_context(state, ClusterContext)
 
-    # Create payload for the cluster start
+    # Convert to brain context
+    brain_context = BrainClusterContext(kubeconfig=context.kubeconfig)
 
-    payload = ClusterStartPayload(name=cluster_name)
+    # Create lifecycle action
+    action = ClusterLifecycleAction(action="start")
 
     try:
-        # Call the actual start function
-        result = start_cluster(context, payload)
+        # Call the brain API function
+        result = cluster_lifecycle(brain_context, cluster_name, action)
 
         return {
             "action": "start_cluster",

@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.devbox.devbox_model import DevboxContext
-from src.lib.sealos.devbox.pause_devbox import pause_devbox
+from src.lib.brain.sealos.devbox.lifecycle import (
+    devbox_lifecycle,
+    BrainDevboxContext,
+    DevboxLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def pause_devbox_tool(
 
     context = extract_sealos_context(state, DevboxContext)
 
-    # Create payload for the devbox pause
-    from src.lib.sealos.devbox.pause_devbox import DevboxPausePayload
+    # Convert to brain context
+    brain_context = BrainDevboxContext(kubeconfig=context.kubeconfig)
 
-    payload = DevboxPausePayload(name=devbox_name)
+    # Create lifecycle action
+    action = DevboxLifecycleAction(action="pause")
 
     try:
-        # Call the actual pause function
-        result = pause_devbox(context, payload)
+        # Call the brain API function
+        result = devbox_lifecycle(brain_context, devbox_name, action)
 
         return {
             "action": "pause_devbox",

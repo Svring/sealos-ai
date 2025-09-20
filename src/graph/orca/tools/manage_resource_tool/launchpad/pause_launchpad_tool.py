@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.launchpad.launchpad_model import LaunchpadContext
-from src.lib.sealos.launchpad.pause_launchpad import pause_launchpad
+from src.lib.brain.sealos.launchpad.lifecycle import (
+    launchpad_lifecycle,
+    BrainLaunchpadContext,
+    LaunchpadLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def pause_launchpad_tool(
 
     context = extract_sealos_context(state, LaunchpadContext)
 
-    # Create payload for the launchpad pause
-    from src.lib.sealos.launchpad.pause_launchpad import LaunchpadPausePayload
+    # Convert to brain context
+    brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
-    payload = LaunchpadPausePayload(name=launchpad_name)
+    # Create lifecycle action
+    action = LaunchpadLifecycleAction(action="pause")
 
     try:
-        # Call the actual pause function
-        result = pause_launchpad(context, payload)
+        # Call the brain API function
+        result = launchpad_lifecycle(brain_context, launchpad_name, action)
 
         return {
             "action": "pause_launchpad",

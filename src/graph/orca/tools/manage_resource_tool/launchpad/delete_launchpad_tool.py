@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.launchpad.launchpad_model import LaunchpadContext
-from src.lib.sealos.launchpad.delete_launchpad import delete_launchpad
+from src.lib.brain.sealos.launchpad.lifecycle import (
+    launchpad_lifecycle,
+    BrainLaunchpadContext,
+    LaunchpadLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def delete_launchpad_tool(
 
     context = extract_sealos_context(state, LaunchpadContext)
 
-    # Create payload for the launchpad delete
-    from src.lib.sealos.launchpad.delete_launchpad import LaunchpadDeletePayload
+    # Convert to brain context
+    brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
-    payload = LaunchpadDeletePayload(name=launchpad_name)
+    # Create lifecycle action
+    action = LaunchpadLifecycleAction(action="delete")
 
     try:
-        # Call the actual delete function
-        result = delete_launchpad(context, payload)
+        # Call the brain API function
+        result = launchpad_lifecycle(brain_context, launchpad_name, action)
 
         return {
             "action": "delete_launchpad",

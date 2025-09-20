@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.cluster.cluster_model import ClusterContext
-from src.lib.sealos.cluster.pause_cluster import pause_cluster
+from src.lib.brain.sealos.cluster.lifecycle import (
+    cluster_lifecycle,
+    BrainClusterContext,
+    ClusterLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def pause_cluster_tool(
 
     context = extract_sealos_context(state, ClusterContext)
 
-    # Create payload for the cluster pause
-    from src.lib.sealos.cluster.pause_cluster import ClusterPausePayload
+    # Convert to brain context
+    brain_context = BrainClusterContext(kubeconfig=context.kubeconfig)
 
-    payload = ClusterPausePayload(name=cluster_name)
+    # Create lifecycle action
+    action = ClusterLifecycleAction(action="pause")
 
     try:
-        # Call the actual pause function
-        result = pause_cluster(context, payload)
+        # Call the brain API function
+        result = cluster_lifecycle(brain_context, cluster_name, action)
 
         return {
             "action": "pause_cluster",

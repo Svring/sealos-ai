@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.devbox.devbox_model import DevboxContext
-from src.lib.sealos.devbox.delete_devbox import delete_devbox
+from src.lib.brain.sealos.devbox.lifecycle import (
+    devbox_lifecycle,
+    BrainDevboxContext,
+    DevboxLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def delete_devbox_tool(
 
     context = extract_sealos_context(state, DevboxContext)
 
-    # Create payload for the devbox delete
-    from src.lib.sealos.devbox.delete_devbox import DevboxDeletePayload
+    # Convert to brain context
+    brain_context = BrainDevboxContext(kubeconfig=context.kubeconfig)
 
-    payload = DevboxDeletePayload(name=devbox_name)
+    # Create lifecycle action
+    action = DevboxLifecycleAction(action="delete")
 
     try:
-        # Call the actual delete function
-        result = delete_devbox(context, payload)
+        # Call the brain API function
+        result = devbox_lifecycle(brain_context, devbox_name, action)
 
         return {
             "action": "delete_devbox",

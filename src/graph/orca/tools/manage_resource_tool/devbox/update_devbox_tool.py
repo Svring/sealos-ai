@@ -20,7 +20,11 @@ from src.models.sealos.devbox.devbox_model import (
     DevboxUpdatePayload,
     DevboxResource,
 )
-from src.lib.sealos.devbox.update_devbox import update_devbox
+from src.lib.brain.sealos.devbox.update import (
+    update_devbox,
+    BrainDevboxContext,
+    DevboxUpdateData,
+)
 
 
 class UpdateDevboxInput(BaseModel):
@@ -102,28 +106,19 @@ async def update_devbox_tool(
 
     context = extract_sealos_context(state, DevboxContext)
 
-    # Create resource configuration only if at least one parameter is provided
-    if cpu is not None or memory is not None:
-        # Build resource dict with only provided parameters
-        resource_dict = {}
-        if cpu is not None:
-            resource_dict["cpu"] = cpu
-        if memory is not None:
-            resource_dict["memory"] = memory
+    # Convert to brain context
+    brain_context = BrainDevboxContext(kubeconfig=context.kubeconfig)
 
-        resource = DevboxResource(**resource_dict)
-
-        # Create payload for the devbox update
-        payload = DevboxUpdatePayload(
-            name=devbox_name,
-            resource=resource,
-        )
-    else:
-        raise ValueError("At least one of cpu or memory must be provided")
+    # Create update data
+    update_data = DevboxUpdateData(
+        name=devbox_name,
+        cpu=cpu,
+        memory=memory,
+    )
 
     try:
-        # Call the actual update function
-        result = update_devbox(context, payload)
+        # Call the brain API function
+        result = update_devbox(brain_context, update_data)
 
         return {
             "action": "update_devbox",

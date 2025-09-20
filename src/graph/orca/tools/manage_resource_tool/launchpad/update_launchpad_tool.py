@@ -20,7 +20,11 @@ from src.models.sealos.launchpad.launchpad_model import (
     LaunchpadUpdatePayload,
     LaunchpadResource,
 )
-from src.lib.sealos.launchpad.update_launchpad import update_launchpad
+from src.lib.brain.sealos.launchpad.update import (
+    update_launchpad,
+    BrainLaunchpadContext,
+    LaunchpadUpdateData,
+)
 
 
 @tool
@@ -86,28 +90,19 @@ async def update_launchpad_tool(
 
     context = extract_sealos_context(state, LaunchpadContext)
 
-    # Create resource configuration only if at least one parameter is provided
-    if cpu is not None or memory is not None:
-        # Build resource dict with only provided parameters
-        resource_dict = {}
-        if cpu is not None:
-            resource_dict["cpu"] = cpu
-        if memory is not None:
-            resource_dict["memory"] = memory
+    # Convert to brain context
+    brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
-        resource = LaunchpadResource(**resource_dict)
-
-        # Create payload for the launchpad update
-        payload = LaunchpadUpdatePayload(
-            name=launchpad_name,
-            resource=resource,
-        )
-    else:
-        raise ValueError("At least one of cpu or memory must be provided")
+    # Create update data
+    update_data = LaunchpadUpdateData(
+        name=launchpad_name,
+        cpu=cpu,
+        memory=memory,
+    )
 
     try:
-        # Call the actual update function
-        result = update_launchpad(context, payload)
+        # Call the brain API function
+        result = update_launchpad(brain_context, update_data)
 
         return {
             "action": "update_launchpad",

@@ -15,7 +15,11 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.cluster.cluster_model import ClusterContext
-from src.lib.sealos.cluster.delete_cluster import delete_cluster
+from src.lib.brain.sealos.cluster.lifecycle import (
+    cluster_lifecycle,
+    BrainClusterContext,
+    ClusterLifecycleAction,
+)
 
 
 @tool
@@ -65,14 +69,15 @@ async def delete_cluster_tool(
 
     context = extract_sealos_context(state, ClusterContext)
 
-    # Create payload for the cluster delete
-    from src.lib.sealos.cluster.delete_cluster import ClusterDeletePayload
+    # Convert to brain context
+    brain_context = BrainClusterContext(kubeconfig=context.kubeconfig)
 
-    payload = ClusterDeletePayload(name=cluster_name)
+    # Create lifecycle action
+    action = ClusterLifecycleAction(action="delete")
 
     try:
-        # Call the actual delete function
-        result = delete_cluster(context, payload)
+        # Call the brain API function
+        result = cluster_lifecycle(brain_context, cluster_name, action)
 
         return {
             "action": "delete_cluster",
