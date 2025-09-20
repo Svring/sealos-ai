@@ -94,3 +94,32 @@ async def start_cluster_tool(
             "error": str(e),
             "message": f"Failed to start cluster '{cluster_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the start cluster tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.cluster.start_cluster_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing start_cluster_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = start_cluster_tool.invoke(
+            {"cluster_name": "test-cluster", "state": mock_state}
+        )
+        print("✅ Start cluster tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Start cluster tool test failed: {e}")
+
+    print(f"Tool name: {start_cluster_tool.name}")
+    print(f"Tool description: {start_cluster_tool.description}")

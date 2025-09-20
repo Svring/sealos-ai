@@ -16,6 +16,15 @@ from src.graph.orca.prompts.manage_resource_prompt import MANAGE_RESOURCE_PROMPT
 
 # Note: Individual tool imports are used instead of the manage_resource_tools module
 
+from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_tool import (
+    get_devbox_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_monitor_tool import (
+    get_devbox_monitor_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_network_tool import (
+    get_devbox_network_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.devbox.update_devbox_tool import (
     update_devbox_tool,
 )
@@ -28,6 +37,15 @@ from src.graph.orca.tools.manage_resource_tool.devbox.pause_devbox_tool import (
 from src.graph.orca.tools.manage_resource_tool.devbox.delete_devbox_tool import (
     delete_devbox_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.cluster.get_cluster_tool import (
+    get_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.get_cluster_logs_tool import (
+    get_cluster_logs_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.get_cluster_monitor_tool import (
+    get_cluster_monitor_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.cluster.update_cluster_tool import (
     update_cluster_tool,
 )
@@ -39,6 +57,18 @@ from src.graph.orca.tools.manage_resource_tool.cluster.pause_cluster_tool import
 )
 from src.graph.orca.tools.manage_resource_tool.cluster.delete_cluster_tool import (
     delete_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.get_launchpad_tool import (
+    get_launchpad_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.get_launchpad_logs_tool import (
+    get_launchpad_logs_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.get_launchpad_monitor_tool import (
+    get_launchpad_monitor_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.get_launchpad_network_tool import (
+    get_launchpad_network_tool,
 )
 from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_tool import (
     update_launchpad_tool,
@@ -56,6 +86,9 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool i
 
 # Tool sets for different resource types
 DEVBOX_TOOLS = [
+    get_devbox_tool,
+    get_devbox_monitor_tool,
+    get_devbox_network_tool,
     update_devbox_tool,
     start_devbox_tool,
     pause_devbox_tool,
@@ -63,6 +96,9 @@ DEVBOX_TOOLS = [
 ]
 
 CLUSTER_TOOLS = [
+    get_cluster_tool,
+    get_cluster_logs_tool,
+    get_cluster_monitor_tool,
     update_cluster_tool,
     start_cluster_tool,
     pause_cluster_tool,
@@ -70,6 +106,10 @@ CLUSTER_TOOLS = [
 ]
 
 LAUNCHPAD_TOOLS = [
+    get_launchpad_tool,
+    get_launchpad_logs_tool,
+    get_launchpad_monitor_tool,
+    get_launchpad_network_tool,
     update_launchpad_tool,
     start_launchpad_tool,
     pause_launchpad_tool,

@@ -7,8 +7,13 @@ from typing import Dict, Any
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
+from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
+from src.utils.interrupt_utils import (
+    handle_interrupt_with_approval,
+    create_rejection_response,
+)
 from src.models.sealos.launchpad.launchpad_model import LaunchpadContext
 from src.lib.brain.sealos.launchpad.monitor import (
     get_launchpad_monitor,
@@ -19,8 +24,8 @@ from src.lib.brain.sealos.launchpad.monitor import (
 @tool
 async def get_launchpad_monitor_tool(
     launchpad_name: str,
-    step: str = "2m",
     state: Annotated[dict, InjectedState],
+    step: str = "2m",
 ) -> Dict[str, Any]:
     """
     Get monitoring data for an app launchpad instance.
@@ -39,8 +44,35 @@ async def get_launchpad_monitor_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
+    # Handle interrupt with approval and parameter editing
+    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
+        action="get_launchpad_monitor",
+        payload={
+            "launchpad_name": launchpad_name,
+            "step": step,
+        },
+        interrupt_func=interrupt,
+        original_params={
+            "launchpad_name": launchpad_name,
+            "step": step,
+        },
+    )
+
+    # Check if the operation was approved
+    if not is_approved:
+        return create_rejection_response(
+            action="get_launchpad_monitor",
+            response_payload=response_payload,
+            resource_name="app launchpad",
+            operation_type="Get Monitor",
+        )
+
+    # Extract the edited parameters
+    launchpad_name = edited_data.get("launchpad_name", launchpad_name)
+    step = edited_data.get("step", step)
+
     context = extract_sealos_context(state, LaunchpadContext)
-    
+
     # Convert to brain context
     brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
@@ -50,10 +82,7 @@ async def get_launchpad_monitor_tool(
 
         return {
             "action": "get_launchpad_monitor",
-            "payload": {
-                "launchpad_name": launchpad_name,
-                "step": step,
-            },
+            "payload": edited_data,
             "success": True,
             "result": result,
             "message": f"Successfully retrieved monitoring data for launchpad '{launchpad_name}'",
@@ -61,10 +90,7 @@ async def get_launchpad_monitor_tool(
     except Exception as e:
         return {
             "action": "get_launchpad_monitor",
-            "payload": {
-                "launchpad_name": launchpad_name,
-                "step": step,
-            },
+            "payload": edited_data,
             "success": False,
             "error": str(e),
             "message": f"Failed to get monitoring data for launchpad '{launchpad_name}': {str(e)}",
@@ -78,11 +104,17 @@ if __name__ == "__main__":
     import asyncio
 
     async def test_get_launchpad_monitor():
+        import os
+        from dotenv import load_dotenv
+
+        load_dotenv()
+
         print("Testing get_launchpad_monitor_tool...")
         try:
-            # Mock state for testing
+            # Get kubeconfig from environment
+            kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
             mock_state = {
-                "kubeconfig": "test-kubeconfig",
+                "kubeconfig": kubeconfig,
             }
 
             result = await get_launchpad_monitor_tool.ainvoke(

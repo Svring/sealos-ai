@@ -94,3 +94,32 @@ async def delete_devbox_tool(
             "error": str(e),
             "message": f"Failed to delete devbox '{devbox_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the delete devbox tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.devbox.delete_devbox_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing delete_devbox_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = delete_devbox_tool.invoke(
+            {"devbox_name": "test-devbox", "state": mock_state}
+        )
+        print("✅ Delete devbox tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Delete devbox tool test failed: {e}")
+
+    print(f"Tool name: {delete_devbox_tool.name}")
+    print(f"Tool description: {delete_devbox_tool.description}")

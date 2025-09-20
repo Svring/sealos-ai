@@ -17,8 +17,6 @@ from src.utils.interrupt_utils import (
 )
 from src.models.sealos.launchpad.launchpad_model import (
     LaunchpadContext,
-    LaunchpadUpdatePayload,
-    LaunchpadResource,
 )
 from src.lib.brain.sealos.launchpad.update import (
     update_launchpad,
@@ -119,3 +117,37 @@ async def update_launchpad_tool(
             "error": str(e),
             "message": f"Failed to update launchpad '{launchpad_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the update launchpad tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing update_launchpad_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = update_launchpad_tool.invoke(
+            {
+                "launchpad_name": "test-launchpad",
+                "cpu": 4,
+                "memory": 8,
+                "state": mock_state,
+            }
+        )
+        print("✅ Update launchpad tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Update launchpad tool test failed: {e}")
+
+    print(f"Tool name: {update_launchpad_tool.name}")
+    print(f"Tool description: {update_launchpad_tool.description}")

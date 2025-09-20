@@ -94,3 +94,32 @@ async def pause_launchpad_tool(
             "error": str(e),
             "message": f"Failed to pause launchpad '{launchpad_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the pause launchpad tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.launchpad.pause_launchpad_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing pause_launchpad_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = pause_launchpad_tool.invoke(
+            {"launchpad_name": "test-launchpad", "state": mock_state}
+        )
+        print("✅ Pause launchpad tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Pause launchpad tool test failed: {e}")
+
+    print(f"Tool name: {pause_launchpad_tool.name}")
+    print(f"Tool description: {pause_launchpad_tool.description}")

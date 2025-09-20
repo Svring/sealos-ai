@@ -1,6 +1,6 @@
 """
-Delete cluster tool for the manage resource agent.
-Handles cluster delete operations with state management.
+Get cluster tool for the manage resource agent.
+Handles cluster information retrieval with state management.
 """
 
 from typing import Dict, Any
@@ -15,29 +15,25 @@ from src.utils.interrupt_utils import (
     create_rejection_response,
 )
 from src.models.sealos.cluster.cluster_model import ClusterContext
-from src.lib.brain.sealos.cluster.lifecycle import (
-    cluster_lifecycle,
-    BrainClusterContext,
-    ClusterLifecycleAction,
-)
+from src.lib.brain.sealos.cluster.get import get_cluster, BrainClusterContext
 
 
 @tool
-async def delete_cluster_tool(
+async def get_cluster_tool(
     cluster_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Delete a database instance.
+    Get information for a database instance.
 
     This tool should be invoked strictly for resources of kind 'cluster'.
     When referring to resources, always refer to cluster as 'database'.
 
     Args:
-        cluster_name: Name of the database to delete
+        cluster_name: Name of the database to get information for
 
     Returns:
-        Dict containing the delete operation result
+        Dict containing the cluster information
 
     Raises:
         ValueError: If required state values are missing
@@ -45,7 +41,7 @@ async def delete_cluster_tool(
     """
     # Handle interrupt with approval and parameter editing
     is_approved, edited_data, response_payload = handle_interrupt_with_approval(
-        action="delete_cluster",
+        action="get_cluster",
         payload={
             "cluster_name": cluster_name,
         },
@@ -58,10 +54,10 @@ async def delete_cluster_tool(
     # Check if the operation was approved
     if not is_approved:
         return create_rejection_response(
-            action="delete_cluster",
+            action="get_cluster",
             response_payload=response_payload,
             resource_name="database",
-            operation_type="Delete",
+            operation_type="Get",
         )
 
     # Extract the edited parameters
@@ -72,54 +68,56 @@ async def delete_cluster_tool(
     # Convert to brain context
     brain_context = BrainClusterContext(kubeconfig=context.kubeconfig)
 
-    # Create lifecycle action
-    action = ClusterLifecycleAction(action="delete")
-
     try:
         # Call the brain API function
-        result = cluster_lifecycle(brain_context, cluster_name, action)
+        result = get_cluster(brain_context, cluster_name)
 
         return {
-            "action": "delete_cluster",
+            "action": "get_cluster",
             "payload": edited_data,
             "success": True,
             "result": result,
-            "message": f"Successfully deleted cluster '{cluster_name}'",
+            "message": f"Successfully retrieved information for cluster '{cluster_name}'",
         }
     except Exception as e:
         return {
-            "action": "delete_cluster",
+            "action": "get_cluster",
             "payload": edited_data,
             "success": False,
             "error": str(e),
-            "message": f"Failed to delete cluster '{cluster_name}': {str(e)}",
+            "message": f"Failed to get information for cluster '{cluster_name}': {str(e)}",
         }
 
 
 if __name__ == "__main__":
-    # Test the delete cluster tool
-    # Run with: python -m src.graph.orca.tools.manage_resource_tool.cluster.delete_cluster_tool
+    # Test the get cluster tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.cluster.get_cluster_tool
 
-    import os
-    from dotenv import load_dotenv
+    import asyncio
 
-    load_dotenv()
+    async def test_get_cluster():
+        import os
+        from dotenv import load_dotenv
 
-    print("Testing delete_cluster_tool...")
-    try:
-        # Get kubeconfig from environment
-        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
-        mock_state = {
-            "kubeconfig": kubeconfig,
-        }
+        load_dotenv()
 
-        result = delete_cluster_tool.invoke(
-            {"cluster_name": "test-cluster", "state": mock_state}
-        )
-        print("✅ Delete cluster tool test successful!")
-        print(f"Result: {result}")
-    except Exception as e:
-        print(f"❌ Delete cluster tool test failed: {e}")
+        print("Testing get_cluster_tool...")
+        try:
+            # Get kubeconfig from environment
+            kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+            mock_state = {
+                "kubeconfig": kubeconfig,
+            }
 
-    print(f"Tool name: {delete_cluster_tool.name}")
-    print(f"Tool description: {delete_cluster_tool.description}")
+            result = await get_cluster_tool.ainvoke(
+                {"cluster_name": "test-cluster", "state": mock_state}
+            )
+            print("✅ Get cluster tool test successful!")
+            print(f"Result: {result}")
+        except Exception as e:
+            print(f"❌ Get cluster tool test failed: {e}")
+
+        print(f"Tool name: {get_cluster_tool.name}")
+        print(f"Tool description: {get_cluster_tool.description}")
+
+    asyncio.run(test_get_cluster())

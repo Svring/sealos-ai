@@ -7,8 +7,13 @@ from typing import Dict, Any
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
+from langgraph.types import interrupt
 
 from src.utils.sealos.extract_context import extract_sealos_context
+from src.utils.interrupt_utils import (
+    handle_interrupt_with_approval,
+    create_rejection_response,
+)
 from src.models.sealos.devbox.devbox_model import DevboxContext
 from src.lib.brain.sealos.devbox.monitor import get_devbox_monitor, BrainDevboxContext
 
@@ -16,8 +21,8 @@ from src.lib.brain.sealos.devbox.monitor import get_devbox_monitor, BrainDevboxC
 @tool
 async def get_devbox_monitor_tool(
     devbox_name: str,
-    step: str = "2m",
     state: Annotated[dict, InjectedState],
+    step: str = "2m",
 ) -> Dict[str, Any]:
     """
     Get monitoring data for a devbox instance.
@@ -36,8 +41,35 @@ async def get_devbox_monitor_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
+    # Handle interrupt with approval and parameter editing
+    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
+        action="get_devbox_monitor",
+        payload={
+            "devbox_name": devbox_name,
+            "step": step,
+        },
+        interrupt_func=interrupt,
+        original_params={
+            "devbox_name": devbox_name,
+            "step": step,
+        },
+    )
+
+    # Check if the operation was approved
+    if not is_approved:
+        return create_rejection_response(
+            action="get_devbox_monitor",
+            response_payload=response_payload,
+            resource_name="devbox",
+            operation_type="Get Monitor",
+        )
+
+    # Extract the edited parameters
+    devbox_name = edited_data.get("devbox_name", devbox_name)
+    step = edited_data.get("step", step)
+
     context = extract_sealos_context(state, DevboxContext)
-    
+
     # Convert to brain context
     brain_context = BrainDevboxContext(kubeconfig=context.kubeconfig)
 
@@ -47,10 +79,7 @@ async def get_devbox_monitor_tool(
 
         return {
             "action": "get_devbox_monitor",
-            "payload": {
-                "devbox_name": devbox_name,
-                "step": step,
-            },
+            "payload": edited_data,
             "success": True,
             "result": result,
             "message": f"Successfully retrieved monitoring data for devbox '{devbox_name}'",
@@ -58,10 +87,7 @@ async def get_devbox_monitor_tool(
     except Exception as e:
         return {
             "action": "get_devbox_monitor",
-            "payload": {
-                "devbox_name": devbox_name,
-                "step": step,
-            },
+            "payload": edited_data,
             "success": False,
             "error": str(e),
             "message": f"Failed to get monitoring data for devbox '{devbox_name}': {str(e)}",
@@ -75,18 +101,22 @@ if __name__ == "__main__":
     import asyncio
 
     async def test_get_devbox_monitor():
+        import os
+        from dotenv import load_dotenv
+
+        load_dotenv()
+
         print("Testing get_devbox_monitor_tool...")
         try:
-            # Mock state for testing
+            # Get kubeconfig from environment
+            kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
             mock_state = {
-                "kubeconfig": "test-kubeconfig",
+                "kubeconfig": kubeconfig,
             }
-            
-            result = await get_devbox_monitor_tool.ainvoke({
-                "devbox_name": "test-devbox",
-                "step": "2m",
-                "state": mock_state
-            })
+
+            result = await get_devbox_monitor_tool.ainvoke(
+                {"devbox_name": "test-devbox", "step": "2m", "state": mock_state}
+            )
             print("✅ Get devbox monitor tool test successful!")
             print(f"Result: {result}")
         except Exception as e:

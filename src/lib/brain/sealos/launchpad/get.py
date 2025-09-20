@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     # Test the function
     try:
-        result = get_launchpad(context, "teable-bjrsnemc")
+        result = get_launchpad(context, "devbox124-release-rfboksunnceh")
         print(result)
     except Exception as e:
         print(f"Error getting launchpad: {e}")

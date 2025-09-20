@@ -17,8 +17,6 @@ from src.utils.interrupt_utils import (
 )
 from src.models.sealos.devbox.devbox_model import (
     DevboxContext,
-    DevboxUpdatePayload,
-    DevboxResource,
 )
 from src.lib.brain.sealos.devbox.update import (
     update_devbox,
@@ -135,3 +133,32 @@ async def update_devbox_tool(
             "error": str(e),
             "message": f"Failed to update devbox '{devbox_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the update devbox tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.devbox.update_devbox_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing update_devbox_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = update_devbox_tool.invoke(
+            {"devbox_name": "test-devbox", "cpu": 4, "memory": 8, "state": mock_state}
+        )
+        print("✅ Update devbox tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Update devbox tool test failed: {e}")
+
+    print(f"Tool name: {update_devbox_tool.name}")
+    print(f"Tool description: {update_devbox_tool.description}")

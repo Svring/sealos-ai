@@ -94,3 +94,32 @@ async def pause_cluster_tool(
             "error": str(e),
             "message": f"Failed to pause cluster '{cluster_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the pause cluster tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.cluster.pause_cluster_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing pause_cluster_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = pause_cluster_tool.invoke(
+            {"cluster_name": "test-cluster", "state": mock_state}
+        )
+        print("✅ Pause cluster tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Pause cluster tool test failed: {e}")
+
+    print(f"Tool name: {pause_cluster_tool.name}")
+    print(f"Tool description: {pause_cluster_tool.description}")

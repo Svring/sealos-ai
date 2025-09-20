@@ -94,3 +94,32 @@ async def pause_devbox_tool(
             "error": str(e),
             "message": f"Failed to pause devbox '{devbox_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the pause devbox tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.devbox.pause_devbox_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing pause_devbox_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = pause_devbox_tool.invoke(
+            {"devbox_name": "test-devbox", "state": mock_state}
+        )
+        print("✅ Pause devbox tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Pause devbox tool test failed: {e}")
+
+    print(f"Tool name: {pause_devbox_tool.name}")
+    print(f"Tool description: {pause_devbox_tool.description}")

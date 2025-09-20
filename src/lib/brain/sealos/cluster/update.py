@@ -84,9 +84,9 @@ if __name__ == "__main__":
 
     update_data = ClusterUpdateData(
         name="clusterakasd",
-        cpu=4,
-        memory=8,
-        replicas=3,
+        cpu=2,
+        memory=2,
+        replicas=2,
     )
 
     # Test the function

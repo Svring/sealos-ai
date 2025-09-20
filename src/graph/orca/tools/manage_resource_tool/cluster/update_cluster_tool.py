@@ -127,3 +127,39 @@ async def update_cluster_tool(
             "error": str(e),
             "message": f"Failed to update cluster '{cluster_name}': {str(e)}",
         }
+
+
+if __name__ == "__main__":
+    # Test the update cluster tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.cluster.update_cluster_tool
+
+    import os
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    print("Testing update_cluster_tool...")
+    try:
+        # Get kubeconfig from environment
+        kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
+        mock_state = {
+            "kubeconfig": kubeconfig,
+        }
+
+        result = update_cluster_tool.invoke(
+            {
+                "cluster_name": "test-cluster",
+                "cpu": 4,
+                "memory": 8,
+                "replicas": 3,
+                "storage": 10,
+                "state": mock_state,
+            }
+        )
+        print("✅ Update cluster tool test successful!")
+        print(f"Result: {result}")
+    except Exception as e:
+        print(f"❌ Update cluster tool test failed: {e}")
+
+    print(f"Tool name: {update_cluster_tool.name}")
+    print(f"Tool description: {update_cluster_tool.description}")
