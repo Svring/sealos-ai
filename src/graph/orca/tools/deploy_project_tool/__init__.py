@@ -7,10 +7,7 @@ from .search_web import search_web
 from .search_docker_hub import search_docker_hub
 from .search_app_store import search_app_store
 from .propose_template_deployment import propose_template_deployment
-from .propose_image_deployment import (
-    propose_image_deployment,
-    DeployDatabase as ImageDeployDatabase,
-)
+from .propose_image_deployment import propose_image_deployment
 from .propose_devenv_deployment import (
     propose_devenv_deployment,
     DeployDevBox,
@@ -36,6 +33,5 @@ __all__ = [
     "propose_devenv_deployment",
     "DeployDevBox",
     "DeployDatabase",
-    "ImageDeployDatabase",
     "deploy_project_tools",
 ]
