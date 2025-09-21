@@ -28,30 +28,25 @@ class LaunchpadUpdateData(BaseModel):
     # This is a placeholder - you may need to adjust based on actual schema
     cpu: Optional[int] = Field(None, description="CPU allocation")
     memory: Optional[int] = Field(None, description="Memory allocation")
-    create_ports: Optional[List[int]] = Field(
-        None, alias="createPorts", description="Array of port numbers to create"
+    createPorts: Optional[List[int]] = Field(
+        None, description="Array of port numbers to create"
     )
-    delete_ports: Optional[List[int]] = Field(
-        None, alias="deletePorts", description="Array of port numbers to delete"
+    deletePorts: Optional[List[int]] = Field(
+        None, description="Array of port numbers to delete"
     )
-    create_env: Optional[List[Tuple[str, str]]] = Field(
+    createEnv: Optional[List[Tuple[str, str]]] = Field(
         None,
-        alias="createEnv",
         description="Array of environment variable tuples (name, value) to create",
     )
-    delete_env: Optional[List[str]] = Field(
+    deleteEnv: Optional[List[str]] = Field(
         None,
-        alias="deleteEnv",
         description="Array of environment variable names to delete",
     )
-    update_env: Optional[List[Tuple[str, str]]] = Field(
+    updateEnv: Optional[List[Tuple[str, str]]] = Field(
         None,
-        alias="updateEnv",
         description="Array of environment variable tuples (name, value) to update",
     )
-    update_image: Optional[str] = Field(
-        None, alias="updateImage", description="Image name to update to"
-    )
+    updateImage: Optional[str] = Field(None, description="Image name to update to")
     # Add other fields as needed based on the actual launchpadUpdateFormSchema
 
 
@@ -100,20 +95,45 @@ def update_launchpad(
 
 # python -m src.lib.brain.sealos.launchpad.update
 if __name__ == "__main__":
-    # Test variables
+    # Commented out original test
+    # context = BrainLaunchpadContext(
+    #     kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
+    # )
+    # update_data = LaunchpadUpdateData(
+    #     name="devbox124-release-rfboksunnceh",
+    #     cpu=4,
+    #     memory=8,
+    # )
+    # try:
+    #     result = update_launchpad(context, update_data)
+    #     print(result)
+    # except Exception as e:
+    #     print(f"Error updating launchpad: {e}")
+
+    # Test with real API call
+    print("Testing LaunchpadUpdateData with real API call...")
+
     context = BrainLaunchpadContext(
         kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
     )
 
-    update_data = LaunchpadUpdateData(
-        name="devbox124-release-rfboksunnceh",
-        cpu=4,
-        memory=8,
+    # Comprehensive test with all fields
+    test_update = LaunchpadUpdateData(
+        name="app-cxwibt",
+        # cpu=4,
+        memory=4,
+        # createPorts=[8080, 3000, 5432],
+        deletePorts=[8080],
+        # createEnv=[("API_KEY", "secret-key"), ("DEBUG", "true")],
+        deleteEnv=["API_KEY", "DEBUG"],
+        # updateEnv=[("API_KEY", "new-secret-key"), ("DEBUG", "false")],
+        # updateImage="nginx:1.25-alpine",
     )
 
-    # Test the function
+    print(f"Test data: {test_update.model_dump(by_alias=True, exclude_none=True)}")
+
     try:
-        result = update_launchpad(context, update_data)
-        print(result)
+        result = update_launchpad(context, test_update)
+        print(f"✅ Launchpad update API call successful: {result}")
     except Exception as e:
-        print(f"Error updating launchpad: {e}")
+        print(f"❌ Error updating launchpad: {e}")

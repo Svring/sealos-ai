@@ -80,7 +80,7 @@ async def delete_devbox_ports_tool(
     # Create update data with ports to delete
     update_data = DevboxUpdateData(
         name=devbox_name,
-        delete_ports=ports,
+        deletePorts=ports,
     )
 
     try:

@@ -28,11 +28,11 @@ class DevboxUpdateData(BaseModel):
     # This is a placeholder - you may need to adjust based on actual schema
     cpu: Optional[int] = Field(None, description="CPU allocation")
     memory: Optional[int] = Field(None, description="Memory allocation")
-    create_ports: Optional[List[int]] = Field(
-        None, alias="createPorts", description="Array of port numbers to create"
+    createPorts: Optional[List[int]] = Field(
+        None, description="Array of port numbers to create"
     )
-    delete_ports: Optional[List[int]] = Field(
-        None, alias="deletePorts", description="Array of port numbers to delete"
+    deletePorts: Optional[List[int]] = Field(
+        None, description="Array of port numbers to delete"
     )
     # Add other fields as needed based on the actual devboxUpdateFormSchema
 
@@ -82,20 +82,41 @@ def update_devbox(
 
 # python -m src.lib.brain.sealos.devbox.update
 if __name__ == "__main__":
-    # Test variables
+    # Commented out original test
+    # context = BrainDevboxContext(
+    #     kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
+    # )
+    # update_data = DevboxUpdateData(
+    #     name="my-devb",
+    #     cpu=4,
+    #     memory=8,
+    # )
+    # try:
+    #     result = update_devbox(context, update_data)
+    #     print(result)
+    # except Exception as e:
+    #     print(f"Error updating devbox: {e}")
+
+    # Test with real API call
+    print("Testing DevboxUpdateData with real API call...")
+
     context = BrainDevboxContext(
         kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
     )
 
-    update_data = DevboxUpdateData(
-        name="my-devb",
-        cpu=4,
-        memory=8,
+    # Comprehensive test with all fields
+    test_update = DevboxUpdateData(
+        name="devbox-v2ysyf",
+        # cpu=4,
+        # memory=8,
+        createPorts=[8080, 3000, 5432],
+        # deletePorts=[8080, 3000, 5432],
     )
 
-    # Test the function
+    print(f"Test data: {test_update.model_dump(by_alias=True, exclude_none=True)}")
+
     try:
-        result = update_devbox(context, update_data)
-        print(result)
+        result = update_devbox(context, test_update)
+        print(f"✅ Devbox update API call successful: {result}")
     except Exception as e:
-        print(f"Error updating devbox: {e}")
+        print(f"❌ Error updating devbox: {e}")

@@ -80,7 +80,7 @@ async def update_launchpad_image_tool(
     # Create update data with new image
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
-        update_image=image,
+        updateImage=image,
     )
 
     try:

@@ -28,6 +28,12 @@ from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_network_tool im
 from src.graph.orca.tools.manage_resource_tool.devbox.update_devbox_tool import (
     update_devbox_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.devbox.create_devbox_ports_tool import (
+    create_devbox_ports_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.devbox.delete_devbox_ports_tool import (
+    delete_devbox_ports_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.devbox.start_devbox_tool import (
     start_devbox_tool,
 )
@@ -73,6 +79,24 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.get_launchpad_network_t
 from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_tool import (
     update_launchpad_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.launchpad.create_launchpad_ports_tool import (
+    create_launchpad_ports_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_ports_tool import (
+    delete_launchpad_ports_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.create_launchpad_env_tool import (
+    create_launchpad_env_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_env_tool import (
+    delete_launchpad_env_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_env_tool import (
+    update_launchpad_env_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_image_tool import (
+    update_launchpad_image_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.launchpad.start_launchpad_tool import (
     start_launchpad_tool,
 )
@@ -90,6 +114,8 @@ DEVBOX_TOOLS = [
     get_devbox_monitor_tool,
     get_devbox_network_tool,
     update_devbox_tool,
+    create_devbox_ports_tool,
+    delete_devbox_ports_tool,
     start_devbox_tool,
     pause_devbox_tool,
     delete_devbox_tool,
@@ -111,6 +137,12 @@ LAUNCHPAD_TOOLS = [
     get_launchpad_monitor_tool,
     get_launchpad_network_tool,
     update_launchpad_tool,
+    create_launchpad_ports_tool,
+    delete_launchpad_ports_tool,
+    create_launchpad_env_tool,
+    delete_launchpad_env_tool,
+    update_launchpad_env_tool,
+    update_launchpad_image_tool,
     start_launchpad_tool,
     pause_launchpad_tool,
     delete_launchpad_tool,

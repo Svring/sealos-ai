@@ -3,11 +3,12 @@ Update launchpad environment variables tool for the manage resource agent.
 Handles launchpad environment variable update operations with state management.
 """
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
 from langgraph.types import interrupt
+from pydantic import BaseModel, Field
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.utils.interrupt_utils import (
@@ -22,10 +23,17 @@ from src.lib.brain.sealos.launchpad.update import (
 )
 
 
+class EnvVar(BaseModel):
+    """Environment variable model."""
+
+    name: str = Field(..., description="Environment variable name")
+    value: str = Field(..., description="Environment variable value")
+
+
 @tool
 async def update_launchpad_env_tool(
     launchpad_name: str,
-    env_vars: List[Tuple[str, str]],
+    env_vars: List[EnvVar],
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
@@ -36,7 +44,7 @@ async def update_launchpad_env_tool(
 
     Args:
         launchpad_name: Name of the app launchpad to update environment variables for
-        env_vars: List of tuples containing (name, value) pairs for environment variables to update
+        env_vars: List of environment variables to update
 
     Returns:
         Dict containing the environment variable update operation result
@@ -77,10 +85,19 @@ async def update_launchpad_env_tool(
     # Convert to brain context
     brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
+    # Convert env_vars to tuples for the API
+    # env_vars can be either EnvVar objects or dictionaries depending on how the tool is called
+    env_var_tuples = []
+    for env_var in env_vars:
+        if isinstance(env_var, dict):
+            env_var_tuples.append((env_var["name"], env_var["value"]))
+        else:
+            env_var_tuples.append((env_var.name, env_var.value))
+
     # Create update data with environment variables to update
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
-        update_env=env_vars,
+        updateEnv=env_var_tuples,
     )
 
     try:
@@ -124,7 +141,10 @@ if __name__ == "__main__":
         result = update_launchpad_env_tool.invoke(
             {
                 "launchpad_name": "test-launchpad",
-                "env_vars": [("API_KEY", "new-key"), ("DEBUG", "false")],
+                "env_vars": [
+                    EnvVar(name="API_KEY", value="new-key"),
+                    EnvVar(name="DEBUG", value="false"),
+                ],
                 "state": mock_state,
             }
         )

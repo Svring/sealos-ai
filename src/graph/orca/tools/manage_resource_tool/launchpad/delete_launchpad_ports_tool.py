@@ -80,7 +80,7 @@ async def delete_launchpad_ports_tool(
     # Create update data with ports to delete
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
-        delete_ports=ports,
+        deletePorts=ports,
     )
 
     try:

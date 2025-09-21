@@ -80,7 +80,7 @@ async def create_launchpad_ports_tool(
     # Create update data with ports to create
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
-        create_ports=ports,
+        createPorts=ports,
     )
 
     try:

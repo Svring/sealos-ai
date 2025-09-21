@@ -80,7 +80,7 @@ async def delete_launchpad_env_tool(
     # Create update data with environment variable names to delete
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
-        delete_env=env_names,
+        deleteEnv=env_names,
     )
 
     try:

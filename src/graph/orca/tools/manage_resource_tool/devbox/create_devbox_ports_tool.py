@@ -80,7 +80,7 @@ async def create_devbox_ports_tool(
     # Create update data with ports to create
     update_data = DevboxUpdateData(
         name=devbox_name,
-        create_ports=ports,
+        createPorts=ports,
     )
 
     try:
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         }
 
         result = create_devbox_ports_tool.invoke(
-            {"devbox_name": "test-devbox", "ports": [8080, 3000], "state": mock_state}
+            {"devbox_name": "devbox-v2ysyf", "ports": [8080, 3000], "state": mock_state}
         )
         print("✅ Create devbox ports tool test successful!")
         print(f"Result: {result}")
