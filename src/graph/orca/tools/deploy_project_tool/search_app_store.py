@@ -210,18 +210,9 @@ if __name__ == "__main__":
 
     print("Testing search_app_store...")
     try:
-        result = search_app_store.invoke("fastgpt")
+        result = search_app_store.invoke("wrenai")
         print("✅ App Store search successful!")
-        print(f"Action: {result['action']}")
-        print(f"Query keywords: {result['payload'].get('query_keywords', 'N/A')}")
-        print(f"Total templates: {result['payload'].get('total_templates', 'N/A')}")
-        if "relevant_templates" in result["payload"]:
-            templates = result["payload"]["relevant_templates"]
-            print(f"Relevant templates found: {len(templates)}")
-            for i, template in enumerate(templates[:2], 1):
-                print(
-                    f"  {i}. {template.get('name', 'Unknown')} (score: {template.get('similarity_score', 0):.3f})"
-                )
+        print(result)
     except Exception as e:
         print(f"❌ App Store search failed: {e}")
 

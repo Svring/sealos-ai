@@ -108,6 +108,7 @@ async def create_launchpad_env_tool(
             "action": "create_launchpad_env",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully created environment variables for launchpad '{launchpad_name}'",
         }
@@ -116,6 +117,7 @@ async def create_launchpad_env_tool(
             "action": "create_launchpad_env",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to create environment variables for launchpad '{launchpad_name}': {str(e)}",
         }

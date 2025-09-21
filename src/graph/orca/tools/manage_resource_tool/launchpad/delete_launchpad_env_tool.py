@@ -91,6 +91,7 @@ async def delete_launchpad_env_tool(
             "action": "delete_launchpad_env",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully deleted environment variables {env_names} from launchpad '{launchpad_name}'",
         }
@@ -99,6 +100,7 @@ async def delete_launchpad_env_tool(
             "action": "delete_launchpad_env",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to delete environment variables from launchpad '{launchpad_name}': {str(e)}",
         }

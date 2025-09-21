@@ -94,4 +94,5 @@ def create_rejection_response(
         "success": False,
         "error": "Operation rejected by user",
         "message": f"{operation_type} operation for {resource_name} '{resource_name}' was rejected by user",
+        "approved": False,
     }

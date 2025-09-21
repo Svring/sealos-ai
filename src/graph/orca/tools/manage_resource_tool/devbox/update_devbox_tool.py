@@ -88,6 +88,10 @@ async def update_devbox_tool(
         },
     )
 
+    print(f"is_approved: {is_approved}")
+    print(f"edited_data: {edited_data}")
+    print(f"response_payload: {response_payload}")
+
     # Check if the operation was approved
     if not is_approved:
         return create_rejection_response(
@@ -122,6 +126,7 @@ async def update_devbox_tool(
             "action": "update_devbox",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully updated devbox '{devbox_name}'",
         }
@@ -130,6 +135,7 @@ async def update_devbox_tool(
             "action": "update_devbox",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to update devbox '{devbox_name}': {str(e)}",
         }

@@ -116,6 +116,7 @@ async def update_cluster_tool(
             "action": "update_cluster",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully updated cluster '{cluster_name}'",
         }
@@ -124,6 +125,7 @@ async def update_cluster_tool(
             "action": "update_cluster",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to update cluster '{cluster_name}': {str(e)}",
         }

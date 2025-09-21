@@ -76,6 +76,7 @@ async def get_devbox_tool(
             "action": "get_devbox",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully retrieved information for devbox '{devbox_name}'",
         }
@@ -84,6 +85,7 @@ async def get_devbox_tool(
             "action": "get_devbox",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to get information for devbox '{devbox_name}': {str(e)}",
         }

@@ -91,6 +91,7 @@ async def create_launchpad_ports_tool(
             "action": "create_launchpad_ports",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully created ports {ports} for launchpad '{launchpad_name}'",
         }
@@ -99,6 +100,7 @@ async def create_launchpad_ports_tool(
             "action": "create_launchpad_ports",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to create ports for launchpad '{launchpad_name}': {str(e)}",
         }

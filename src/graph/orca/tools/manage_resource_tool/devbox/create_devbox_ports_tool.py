@@ -91,6 +91,7 @@ async def create_devbox_ports_tool(
             "action": "create_devbox_ports",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully created ports {ports} for devbox '{devbox_name}'",
         }
@@ -99,6 +100,7 @@ async def create_devbox_ports_tool(
             "action": "create_devbox_ports",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to create ports for devbox '{devbox_name}': {str(e)}",
         }

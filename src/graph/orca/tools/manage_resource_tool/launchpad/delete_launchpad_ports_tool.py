@@ -91,6 +91,7 @@ async def delete_launchpad_ports_tool(
             "action": "delete_launchpad_ports",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully deleted ports {ports} from launchpad '{launchpad_name}'",
         }
@@ -99,6 +100,7 @@ async def delete_launchpad_ports_tool(
             "action": "delete_launchpad_ports",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to delete ports from launchpad '{launchpad_name}': {str(e)}",
         }

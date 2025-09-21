@@ -108,6 +108,7 @@ async def update_launchpad_env_tool(
             "action": "update_launchpad_env",
             "payload": edited_data,
             "success": True,
+            "approved": True,
             "result": result,
             "message": f"Successfully updated environment variables for launchpad '{launchpad_name}'",
         }
@@ -116,6 +117,7 @@ async def update_launchpad_env_tool(
             "action": "update_launchpad_env",
             "payload": edited_data,
             "success": False,
+            "approved": True,
             "error": str(e),
             "message": f"Failed to update environment variables for launchpad '{launchpad_name}': {str(e)}",
         }
