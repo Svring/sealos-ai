@@ -5,7 +5,7 @@ Update devbox configuration using Brain API.
 import os
 import requests
 from dotenv import load_dotenv
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 from src.utils.brain.compose_api_url import compose_api_url
 
@@ -28,6 +28,12 @@ class DevboxUpdateData(BaseModel):
     # This is a placeholder - you may need to adjust based on actual schema
     cpu: Optional[int] = Field(None, description="CPU allocation")
     memory: Optional[int] = Field(None, description="Memory allocation")
+    create_ports: Optional[List[int]] = Field(
+        None, alias="createPorts", description="Array of port numbers to create"
+    )
+    delete_ports: Optional[List[int]] = Field(
+        None, alias="deletePorts", description="Array of port numbers to delete"
+    )
     # Add other fields as needed based on the actual devboxUpdateFormSchema
 
 
