@@ -16,7 +16,9 @@ from src.graph.orca.tools.manage_project_tools import add_resource_to_project
 
 
 # Tools for the project management node
-tools = [add_resource_to_project]
+# tools = [add_resource_to_project]
+
+tools = []
 
 
 async def manage_project_agent(
