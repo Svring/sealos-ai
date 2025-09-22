@@ -37,7 +37,7 @@ def build_graph():
     workflow.add_node(
         "manage_resource_tool_node", ToolNode(tools=manage_resource_tools)
     )
-    workflow.add_node("propose_project_tool_node", ToolNode(tools=[propose_project]))
+    # workflow.add_node("propose_project_tool_node", ToolNode(tools=[propose_project]))
 
     workflow.add_node("deploy_project_tool_node", ToolNode(tools=deploy_project_tools))
 
