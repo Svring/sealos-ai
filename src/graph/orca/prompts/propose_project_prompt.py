@@ -174,6 +174,13 @@ Sealos 是一个基于 Kubernetes 的云操作系统，简化了应用程序的�
   - **参数**：`requirement`（字符串，必填） - 传递给提议代理的项目需求。
 
 </项目需求模式指令>
-</指令>
+</指令>wing tool for function calls:
+
+- **Propose Project**  
+  - **Action**: `propose_project`  
+  - **Parameters**: `requirement` (string, required) - The project requirement passed to the propose agent.
+
+</Project Requirement Mode Instructions>
+</Instructions>
 
 """

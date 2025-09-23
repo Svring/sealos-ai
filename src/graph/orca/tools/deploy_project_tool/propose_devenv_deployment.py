@@ -14,8 +14,8 @@ class DeployDevBox(BaseModel):
 
     name: str = Field(
         ...,
-        max_length=12,
-        description="DevBox name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'dev-env', 'frontend_dev', 'api-dev'",
+        max_length=30,
+        description="DevBox name (max 30 chars, lowercase letters, numbers, hyphens only). Examples: 'dev-env', 'frontend_dev', 'api-dev'",
     )
     runtime: Literal[
         "nuxt3",
@@ -76,8 +76,8 @@ class DeployDatabase(BaseModel):
 
     name: str = Field(
         ...,
-        max_length=12,
-        description="Database name (max 12 chars, lowercase letters, numbers, hyphens only). Examples: 'main-db', 'cache-db', 'analytics'",
+        max_length=30,
+        description="Database name (max 30 chars, lowercase letters, numbers, hyphens only). Examples: 'main-db', 'cache-db', 'analytics'",
     )
     type: Literal[
         "postgresql",
@@ -106,15 +106,15 @@ class DeployDatabase(BaseModel):
 
 @tool
 async def propose_devenv_deployment(
-    devbox: Optional[DeployDevBox] = None,
-    database: Optional[DeployDatabase] = None,
+    devbox: Optional[List[DeployDevBox]] = None,
+    database: Optional[List[DeployDatabase]] = None,
 ) -> Dict[str, Any]:
     """
-    Propose deployment of a development environment with DevBox and Database. Need to be reviewed and confirmed by the user.
+    Propose deployment of a development environment with one or more DevBox instances and/or databases. Need to be reviewed and confirmed by the user.
 
     Args:
-        devbox (Optional[DeployDevBox]): DevBox configuration for development environment
-        database (Optional[DeployDatabase]): Database configuration for the development environment
+        devbox (Optional[List[DeployDevBox]]): List of DevBox configurations for development environments. Can deploy multiple DevBox instances.
+        database (Optional[List[DeployDatabase]]): List of database configurations for the development environment. Can deploy multiple databases.
 
     Returns:
         Dict containing the action and payload for development environment deployment
@@ -122,8 +122,8 @@ async def propose_devenv_deployment(
     return {
         "action": "propose_devenv_deployment",
         "payload": {
-            "devbox": devbox.model_dump() if devbox else None,
-            "database": database.model_dump() if database else None,
+            "devbox": [item.model_dump() for item in devbox] if devbox else None,
+            "database": [item.model_dump() for item in database] if database else None,
         },
     }
 
@@ -138,10 +138,10 @@ if __name__ == "__main__":
         print("Testing propose_devenv_deployment...")
         try:
             # Test with both devbox and database
-            devbox = DeployDevBox(
-                name="test-dev", runtime="next.js", ports=[3000, 8080]
-            )
-            database = DeployDatabase(name="test-db", type="postgresql")
+            devbox = [
+                DeployDevBox(name="test-dev", runtime="next.js", ports=[3000, 8080])
+            ]
+            database = [DeployDatabase(name="test-db", type="postgresql")]
 
             result1 = await propose_devenv_deployment.ainvoke(
                 {"devbox": devbox, "database": database}
@@ -151,17 +151,36 @@ if __name__ == "__main__":
 
             # Test with only devbox
             result2 = await propose_devenv_deployment.ainvoke(
-                {"devbox": DeployDevBox(name="frontend", runtime="react", ports=[3000])}
+                {
+                    "devbox": [
+                        DeployDevBox(name="frontend", runtime="react", ports=[3000])
+                    ]
+                }
             )
             print("✅ DevEnv deployment proposal (devbox only) successful!")
             print(f"Result: {result2}")
 
             # Test with only database
             result3 = await propose_devenv_deployment.ainvoke(
-                {"database": DeployDatabase(name="cache-db", type="redis")}
+                {"database": [DeployDatabase(name="cache-db", type="redis")]}
             )
             print("✅ DevEnv deployment proposal (database only) successful!")
             print(f"Result: {result3}")
+
+            # Test with multiple devboxes and databases
+            multiple_devboxes = [
+                DeployDevBox(name="frontend-dev", runtime="react", ports=[3000]),
+                DeployDevBox(name="backend-dev", runtime="python", ports=[8000]),
+            ]
+            multiple_databases = [
+                DeployDatabase(name="main-db", type="postgresql"),
+                DeployDatabase(name="cache-db", type="redis"),
+            ]
+            result4 = await propose_devenv_deployment.ainvoke(
+                {"devbox": multiple_devboxes, "database": multiple_databases}
+            )
+            print("✅ DevEnv deployment proposal (multiple resources) successful!")
+            print(f"Result: {result4}")
 
         except Exception as e:
             print(f"❌ DevEnv deployment proposal failed: {e}")
