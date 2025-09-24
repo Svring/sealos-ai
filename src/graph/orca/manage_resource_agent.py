@@ -5,7 +5,7 @@ Handles individual resource management operations with tools and actions.
 
 import json
 from typing import Literal, List, Any
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, AIMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
@@ -208,45 +208,68 @@ async def manage_resource_agent(
     Handles model binding, system prompts, Sealos context, and tool calls for individual resource management.
     Dynamically selects tools based on the resource type from resource_context.
     """
-    # Extract state data
-    (
-        messages,
-        base_url,
-        api_key,
-        model_name,
-        resource_context,
-    ) = get_state_values(
-        state,
-        {
-            "messages": [],
-            "base_url": None,
-            "api_key": None,
-            "model_name": None,
-            "resource_context": None,
-        },
-    )
+    try:
+        # Extract state data
+        (
+            messages,
+            base_url,
+            api_key,
+            model_name,
+            resource_context,
+        ) = get_state_values(
+            state,
+            {
+                "messages": [],
+                "base_url": None,
+                "api_key": None,
+                "model_name": None,
+                "resource_context": None,
+            },
+        )
 
-    model = get_sealos_model(base_url=base_url, api_key=api_key, model_name=model_name)
+        model = get_sealos_model(
+            base_url=base_url, api_key=api_key, model_name=model_name
+        )
 
-    # Dynamically select tools based on resource type
-    selected_tools = get_tools_for_resource_type(resource_context)
+        # Dynamically select tools based on resource type
+        selected_tools = get_tools_for_resource_type(resource_context)
 
-    model_with_tools = model.bind_tools(selected_tools, parallel_tool_calls=False)
+        model_with_tools = model.bind_tools(selected_tools, parallel_tool_calls=False)
 
-    # Build messages with system prompt for resource management
-    system_message = SystemMessage(content=MANAGE_RESOURCE_PROMPT)
+        # Build messages with system prompt for resource management
+        system_message = SystemMessage(content=MANAGE_RESOURCE_PROMPT)
 
-    # Build message list
-    message_list = [system_message] + [SystemMessage(str(resource_context))] + messages
+        # Build message list
+        context_emphasis = SystemMessage(
+            content="IMPORTANT: The next message contains the newest resource context. Pay close attention to it as it reflects the current state of the resource, including any recent modifications like added ports, changed environment variables, or updated configurations. Always use this latest context when answering questions or making decisions."
+        )
+        message_list = (
+            [system_message]
+            + [context_emphasis]
+            + [SystemMessage(str(resource_context))]
+            + messages
+        )
 
-    # Get model response
-    response = await model_with_tools.ainvoke(message_list)
+        print(message_list)
 
-    # Check if the response contains tool calls
-    if hasattr(response, "tool_calls") and response.tool_calls:
-        return Command(goto="manage_resource_tool_node", update={"messages": response})
-    else:
+        # Get model response
+        response = await model_with_tools.ainvoke(message_list)
+
+        # Check if the response contains tool calls
+        if hasattr(response, "tool_calls") and response.tool_calls:
+            return Command(
+                goto="manage_resource_tool_node", update={"messages": response}
+            )
+        else:
+            return Command(
+                goto="__end__",
+                update={"messages": response},
+            )
+
+    except Exception as e:
+        # Handle any errors that occur during resource management processing
+        error_message = f"An error occurred: {str(e)}"
         return Command(
             goto="__end__",
-            update={"messages": response},
+            update={"messages": AIMessage(content=error_message)},
         )
