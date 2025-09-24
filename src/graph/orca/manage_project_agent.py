@@ -4,15 +4,15 @@ Handles project management operations with tools and actions.
 """
 
 from typing import Literal
-from langchain_core.messages import SystemMessage, AIMessage
+from langchain_core.messages import SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from src.provider.backbone_provider import get_sealos_model
 from src.utils.context_utils import get_state_values
+from src.utils.error_utils import extract_error_type_and_construct_message
 from src.graph.orca.state import OrcaState
 from src.graph.orca.prompts.manage_project_prompt import MANAGE_PROJECT_PROMPT
-from src.graph.orca.tools.manage_project_tools import add_resource_to_project
 
 
 # Tools for the project management node
@@ -87,8 +87,9 @@ async def manage_project_agent(
 
     except Exception as e:
         # Handle any errors that occur during project management processing
-        error_message = f"An error occurred: {str(e)}"
+        error_str = str(e)
+        structured_error_message = extract_error_type_and_construct_message(error_str)
         return Command(
             goto="__end__",
-            update={"messages": AIMessage(content=error_message)},
+            update={"messages": SystemMessage(content=structured_error_message)},
         )
