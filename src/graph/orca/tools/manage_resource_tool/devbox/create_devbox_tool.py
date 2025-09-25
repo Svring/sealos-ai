@@ -24,7 +24,7 @@ from src.lib.brain.sealos.devbox.create import (
 
 @tool
 async def create_devbox_tool(
-    devbox_name: str,
+    name: str,
     state: Annotated[dict, InjectedState],
     runtime: Literal[
         "nuxt3",
@@ -72,7 +72,7 @@ async def create_devbox_tool(
     When referring to resources, always refer to devbox as 'devbox'.
 
     Args:
-        devbox_name: Name of the devbox to create
+        name: Name of the devbox to create
         runtime: Runtime environment name
         cpu: CPU allocation in cores (default: 2)
         memory: Memory allocation in GB (default: 2)
@@ -89,7 +89,7 @@ async def create_devbox_tool(
     is_approved, edited_data, response_payload = handle_interrupt_with_approval(
         action="create_devbox",
         payload={
-            "devbox_name": devbox_name,
+            "name": name,
             "runtime": runtime,
             "cpu": cpu,
             "memory": memory,
@@ -97,7 +97,7 @@ async def create_devbox_tool(
         },
         interrupt_func=interrupt,
         original_params={
-            "devbox_name": devbox_name,
+            "name": name,
             "runtime": runtime,
             "cpu": cpu,
             "memory": memory,
@@ -115,7 +115,7 @@ async def create_devbox_tool(
         )
 
     # Extract the edited parameters
-    devbox_name = edited_data.get("devbox_name", devbox_name)
+    devbox_name = edited_data.get("name", name)
     runtime = edited_data.get("runtime", runtime)
     cpu = edited_data.get("cpu", cpu)
     memory = edited_data.get("memory", memory)
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
         result = create_devbox_tool.invoke(
             {
-                "devbox_name": "test-devbox",
+                "name": "test-devbox",
                 "runtime": "python",
                 "cpu": 2,
                 "memory": 4,

@@ -24,7 +24,7 @@ from src.lib.brain.sealos.launchpad.create import (
 
 @tool
 async def create_launchpad_tool(
-    launchpad_name: str,
+    name: str,
     image: str,
     state: Annotated[dict, InjectedState],
     cpu: int = 2,
@@ -39,7 +39,7 @@ async def create_launchpad_tool(
     When referring to resources, always refer to launchpad as 'app launchpad'.
 
     Args:
-        launchpad_name: Name of the app launchpad to create
+        name: Name of the app launchpad to create
         image: Docker image name
         cpu: CPU allocation in cores (default: 2)
         memory: Memory allocation in GB (default: 2)
@@ -57,7 +57,7 @@ async def create_launchpad_tool(
     is_approved, edited_data, response_payload = handle_interrupt_with_approval(
         action="create_launchpad",
         payload={
-            "launchpad_name": launchpad_name,
+            "name": name,
             "image": image,
             "cpu": cpu,
             "memory": memory,
@@ -66,7 +66,7 @@ async def create_launchpad_tool(
         },
         interrupt_func=interrupt,
         original_params={
-            "launchpad_name": launchpad_name,
+            "name": name,
             "image": image,
             "cpu": cpu,
             "memory": memory,
@@ -85,7 +85,7 @@ async def create_launchpad_tool(
         )
 
     # Extract the edited parameters
-    launchpad_name = edited_data.get("launchpad_name", launchpad_name)
+    launchpad_name = edited_data.get("name", name)
     image = edited_data.get("image", image)
     cpu = edited_data.get("cpu", cpu)
     memory = edited_data.get("memory", memory)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
         result = create_launchpad_tool.invoke(
             {
-                "launchpad_name": "test-launchpad",
+                "name": "test-launchpad",
                 "image": "nginx:latest",
                 "cpu": 2,
                 "memory": 4,

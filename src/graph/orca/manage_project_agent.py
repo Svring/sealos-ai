@@ -16,9 +16,36 @@ from src.graph.orca.prompts.manage_project_prompt import MANAGE_PROJECT_PROMPT
 
 
 # Tools for the project management node
-# tools = [add_resource_to_project]
+from src.graph.orca.tools.manage_resource_tool.devbox.create_devbox_tool import (
+    create_devbox_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.devbox.delete_devbox_tool import (
+    delete_devbox_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.create_cluster_tool import (
+    create_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.delete_cluster_tool_new import (
+    delete_cluster_tool_new,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.create_launchpad_tool import (
+    create_launchpad_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool_new import (
+    delete_launchpad_tool_new,
+)
 
-tools = []
+# Create and delete tools for project management
+CREATE_DELETE_TOOLS = [
+    create_devbox_tool,
+    delete_devbox_tool,
+    create_cluster_tool,
+    delete_cluster_tool_new,
+    create_launchpad_tool,
+    delete_launchpad_tool_new,
+]
+
+tools = CREATE_DELETE_TOOLS
 
 
 async def manage_project_agent(
@@ -46,12 +73,6 @@ async def manage_project_agent(
                 "project_context": None,
             },
         )
-
-        # modifiedConfig = copilotkit_customize_config(
-        #     config,
-        #     emit_messages=False,  # if you want to disable message streaming
-        #     # emit_tool_calls=False,  # if you want to disable tool call streaming
-        # )
 
         model = get_sealos_model(
             base_url=base_url, api_key=api_key, model_name=model_name

@@ -24,7 +24,7 @@ from src.lib.brain.sealos.cluster.create import (
 
 @tool
 async def create_cluster_tool(
-    cluster_name: str,
+    name: str,
     state: Annotated[dict, InjectedState],
     type: Literal[
         "postgresql",
@@ -46,7 +46,7 @@ async def create_cluster_tool(
     When referring to resources, always refer to cluster as 'database'.
 
     Args:
-        cluster_name: Name of the database to create
+        name: Name of the database to create
         type: Database type
         cpu: CPU allocation in cores (default: 2)
         memory: Memory allocation in GB (default: 2)
@@ -64,7 +64,7 @@ async def create_cluster_tool(
     is_approved, edited_data, response_payload = handle_interrupt_with_approval(
         action="create_cluster",
         payload={
-            "cluster_name": cluster_name,
+            "name": name,
             "type": type,
             "cpu": cpu,
             "memory": memory,
@@ -73,7 +73,7 @@ async def create_cluster_tool(
         },
         interrupt_func=interrupt,
         original_params={
-            "cluster_name": cluster_name,
+            "name": name,
             "type": type,
             "cpu": cpu,
             "memory": memory,
@@ -92,7 +92,7 @@ async def create_cluster_tool(
         )
 
     # Extract the edited parameters
-    cluster_name = edited_data.get("cluster_name", cluster_name)
+    cluster_name = edited_data.get("name", name)
     type = edited_data.get("type", type)
     cpu = edited_data.get("cpu", cpu)
     memory = edited_data.get("memory", memory)
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
         result = create_cluster_tool.invoke(
             {
-                "cluster_name": "test-cluster",
+                "name": "test-cluster",
                 "type": "postgresql",
                 "cpu": 2,
                 "memory": 4,
