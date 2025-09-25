@@ -40,7 +40,6 @@ class DeployDevBox(BaseModel):
         "express.js",
         "django",
         "next.js",
-        "sealaf",
         "go",
         "react",
         "php",
@@ -51,12 +50,20 @@ class DeployDevBox(BaseModel):
         "gin",
         "echo",
         "rust",
+        "mcp",
+        "hugo",
+        "spring-boot",
+        "node.js",
     ] = Field(
         description="The runtime environment for development (e.g., 'Next.js', 'Python', 'React')"
     )
     ports: Optional[List[int]] = Field(
         default=None,
         description="Optional list of port numbers to expose for the development environment",
+    )
+    reliance: Optional[List[str]] = Field(
+        default=None,
+        description="Optional list of database names that this DevBox should connect to. These databases must be defined in the same deployment proposal.",
     )
 
     @field_validator("name")
@@ -85,9 +92,7 @@ class DeployDatabase(BaseModel):
         "apecloud-mysql",
         "redis",
         "kafka",
-        "weaviate",
         "milvus",
-        "pulsar",
     ] = Field(
         description="The type of database (e.g., 'postgresql', 'mongodb', 'redis')"
     )
@@ -106,6 +111,7 @@ class DeployDatabase(BaseModel):
 
 @tool
 async def propose_devenv_deployment(
+    project_name: str,
     devbox: Optional[List[DeployDevBox]] = None,
     database: Optional[List[DeployDatabase]] = None,
 ) -> Dict[str, Any]:
@@ -113,6 +119,7 @@ async def propose_devenv_deployment(
     Propose deployment of a development environment with one or more DevBox instances and/or databases. Need to be reviewed and confirmed by the user.
 
     Args:
+        project_name (str): Name of the project for this development environment deployment.
         devbox (Optional[List[DeployDevBox]]): List of DevBox configurations for development environments. Can deploy multiple DevBox instances.
         database (Optional[List[DeployDatabase]]): List of database configurations for the development environment. Can deploy multiple databases.
 
@@ -122,6 +129,7 @@ async def propose_devenv_deployment(
     return {
         "action": "propose_devenv_deployment",
         "payload": {
+            "project_name": project_name,
             "devbox": [item.model_dump() for item in devbox] if devbox else None,
             "database": [item.model_dump() for item in database] if database else None,
         },
@@ -139,12 +147,17 @@ if __name__ == "__main__":
         try:
             # Test with both devbox and database
             devbox = [
-                DeployDevBox(name="test-dev", runtime="next.js", ports=[3000, 8080])
+                DeployDevBox(
+                    name="test-dev",
+                    runtime="next.js",
+                    ports=[3000, 8080],
+                    reliance=["test-db"],
+                )
             ]
             database = [DeployDatabase(name="test-db", type="postgresql")]
 
             result1 = await propose_devenv_deployment.ainvoke(
-                {"devbox": devbox, "database": database}
+                {"project_name": "test-project", "devbox": devbox, "database": database}
             )
             print("✅ DevEnv deployment proposal (both) successful!")
             print(f"Result: {result1}")
@@ -152,9 +165,10 @@ if __name__ == "__main__":
             # Test with only devbox
             result2 = await propose_devenv_deployment.ainvoke(
                 {
+                    "project_name": "frontend-project",
                     "devbox": [
                         DeployDevBox(name="frontend", runtime="react", ports=[3000])
-                    ]
+                    ],
                 }
             )
             print("✅ DevEnv deployment proposal (devbox only) successful!")
@@ -162,22 +176,39 @@ if __name__ == "__main__":
 
             # Test with only database
             result3 = await propose_devenv_deployment.ainvoke(
-                {"database": [DeployDatabase(name="cache-db", type="redis")]}
+                {
+                    "project_name": "database-project",
+                    "database": [DeployDatabase(name="cache-db", type="redis")],
+                }
             )
             print("✅ DevEnv deployment proposal (database only) successful!")
             print(f"Result: {result3}")
 
             # Test with multiple devboxes and databases
             multiple_devboxes = [
-                DeployDevBox(name="frontend-dev", runtime="react", ports=[3000]),
-                DeployDevBox(name="backend-dev", runtime="python", ports=[8000]),
+                DeployDevBox(
+                    name="frontend-dev",
+                    runtime="react",
+                    ports=[3000],
+                    reliance=["main-db"],
+                ),
+                DeployDevBox(
+                    name="backend-dev",
+                    runtime="python",
+                    ports=[8000],
+                    reliance=["main-db", "cache-db"],
+                ),
             ]
             multiple_databases = [
                 DeployDatabase(name="main-db", type="postgresql"),
                 DeployDatabase(name="cache-db", type="redis"),
             ]
             result4 = await propose_devenv_deployment.ainvoke(
-                {"devbox": multiple_devboxes, "database": multiple_databases}
+                {
+                    "project_name": "multi-resource-project",
+                    "devbox": multiple_devboxes,
+                    "database": multiple_databases,
+                }
             )
             print("✅ DevEnv deployment proposal (multiple resources) successful!")
             print(f"Result: {result4}")
@@ -193,11 +224,13 @@ if __name__ == "__main__":
         try:
             # Test valid models
             valid_devbox = DeployDevBox(
-                name="valid-dev", runtime="python", ports=[8000]
+                name="valid-dev", runtime="python", ports=[8000], reliance=["valid-db"]
             )
             valid_database = DeployDatabase(name="valid-db", type="mongodb")
             print("✅ Model validation successful!")
-            print(f"Valid DevBox: {valid_devbox.name} ({valid_devbox.runtime})")
+            print(
+                f"Valid DevBox: {valid_devbox.name} ({valid_devbox.runtime}) with reliance: {valid_devbox.reliance}"
+            )
             print(f"Valid Database: {valid_database.name} ({valid_database.type})")
         except Exception as e:
             print(f"❌ Model validation failed: {e}")

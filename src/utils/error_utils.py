@@ -27,7 +27,7 @@ def extract_error_type_and_construct_message(error_str: str) -> str:
 
     # Construct structured message
     structured_message = {
-        "type": "error",
+        "type": "universal.error",
         "payload": {"type": error_type, "error": error_str},
     }
 
