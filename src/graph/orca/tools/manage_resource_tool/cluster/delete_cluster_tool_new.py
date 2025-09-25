@@ -1,6 +1,6 @@
 """
-Delete devbox tool for the manage resource agent.
-Handles devbox deletion operations with state management.
+Delete cluster tool for the manage resource agent.
+Handles cluster deletion operations with state management.
 """
 
 from typing import Dict, Any
@@ -14,29 +14,29 @@ from src.utils.interrupt_utils import (
     handle_interrupt_with_approval,
     create_rejection_response,
 )
-from src.models.sealos.devbox.devbox_model import DevboxContext
-from src.lib.brain.sealos.devbox.delete import (
-    delete_devbox,
-    BrainDevboxContext,
+from src.models.sealos.cluster.cluster_model import ClusterContext
+from src.lib.brain.sealos.cluster.delete import (
+    delete_cluster,
+    BrainClusterContext,
 )
 
 
 @tool
-async def delete_devbox_tool(
-    devbox_name: str,
+async def delete_cluster_tool_new(
+    cluster_name: str,
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Delete a devbox instance.
+    Delete a database instance.
 
-    This tool should be invoked strictly for resources of kind 'devbox'.
-    When referring to resources, always refer to devbox as 'devbox'.
+    This tool should be invoked strictly for resources of kind 'cluster'.
+    When referring to resources, always refer to cluster as 'database'.
 
     Args:
-        devbox_name: Name of the devbox to delete
+        cluster_name: Name of the database to delete
 
     Returns:
-        Dict containing the devbox deletion operation result
+        Dict containing the database deletion operation result
 
     Raises:
         ValueError: If required state values are missing
@@ -44,66 +44,66 @@ async def delete_devbox_tool(
     """
     # Handle interrupt with approval and parameter editing
     is_approved, edited_data, response_payload = handle_interrupt_with_approval(
-        action="delete_devbox",
+        action="delete_cluster",
         payload={
-            "devbox_name": devbox_name,
+            "cluster_name": cluster_name,
         },
         interrupt_func=interrupt,
         original_params={
-            "devbox_name": devbox_name,
+            "cluster_name": cluster_name,
         },
     )
 
     # Check if the operation was approved
     if not is_approved:
         return create_rejection_response(
-            action="delete_devbox",
+            action="delete_cluster",
             response_payload=response_payload,
-            resource_name="devbox",
+            resource_name="database",
             operation_type="Delete",
         )
 
     # Extract the edited parameters
-    devbox_name = edited_data.get("devbox_name", devbox_name)
+    cluster_name = edited_data.get("cluster_name", cluster_name)
 
-    context = extract_sealos_context(state, DevboxContext)
+    context = extract_sealos_context(state, ClusterContext)
 
     # Convert to brain context
-    brain_context = BrainDevboxContext(kubeconfig=context.kubeconfig)
+    brain_context = BrainClusterContext(kubeconfig=context.kubeconfig)
 
     try:
         # Call the brain API function
-        result = delete_devbox(brain_context, devbox_name)
+        result = delete_cluster(brain_context, cluster_name)
 
         return {
-            "action": "delete_devbox",
+            "action": "delete_cluster",
             "payload": edited_data,
             "success": True,
             "approved": True,
             "result": result,
-            "message": f"Successfully deleted devbox '{devbox_name}'",
+            "message": f"Successfully deleted database '{cluster_name}'",
         }
     except Exception as e:
         return {
-            "action": "delete_devbox",
+            "action": "delete_cluster",
             "payload": edited_data,
             "success": False,
             "approved": True,
             "error": str(e),
-            "message": f"Failed to delete devbox '{devbox_name}': {str(e)}",
+            "message": f"Failed to delete database '{cluster_name}': {str(e)}",
         }
 
 
 if __name__ == "__main__":
-    # Test the delete devbox tool
-    # Run with: python -m src.graph.orca.tools.manage_resource_tool.devbox.delete_devbox_tool
+    # Test the delete cluster tool
+    # Run with: python -m src.graph.orca.tools.manage_resource_tool.cluster.delete_cluster_tool_new
 
     import os
     from dotenv import load_dotenv
 
     load_dotenv()
 
-    print("Testing delete_devbox_tool...")
+    print("Testing delete_cluster_tool_new...")
     try:
         # Get kubeconfig from environment
         kubeconfig = os.getenv("BJA_KC", "test-kubeconfig")
@@ -111,13 +111,13 @@ if __name__ == "__main__":
             "kubeconfig": kubeconfig,
         }
 
-        result = delete_devbox_tool.invoke(
-            {"devbox_name": "test-devbox", "state": mock_state}
+        result = delete_cluster_tool_new.invoke(
+            {"cluster_name": "test-cluster", "state": mock_state}
         )
-        print("✅ Delete devbox tool test successful!")
+        print("✅ Delete cluster tool test successful!")
         print(f"Result: {result}")
     except Exception as e:
-        print(f"❌ Delete devbox tool test failed: {e}")
+        print(f"❌ Delete cluster tool test failed: {e}")
 
-    print(f"Tool name: {delete_devbox_tool.name}")
-    print(f"Tool description: {delete_devbox_tool.description}")
+    print(f"Tool name: {delete_cluster_tool_new.name}")
+    print(f"Tool description: {delete_cluster_tool_new.description}")
