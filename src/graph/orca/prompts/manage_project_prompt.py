@@ -42,8 +42,10 @@ You have access to the following tools for project-level resource management:
 
 ### Resource Deletion Tools
 * **Delete DevBox**: `delete_devbox_tool` - Delete devbox instances
-* **Delete Database**: `delete_cluster_tool_new` - Delete database instances
-* **Delete App Launchpad**: `delete_launchpad_tool_new` - Delete app launchpad instances
+* **Delete Database**: `delete_cluster_tool_new` - Delete database instances (new version)
+* **Delete Database**: `delete_cluster_tool` - Delete database instances (standard version)
+* **Delete App Launchpad**: `delete_launchpad_tool_new` - Delete app launchpad instances (new version)
+* **Delete App Launchpad**: `delete_launchpad_tool` - Delete app launchpad instances (standard version)
 
 ## Instructions
 

@@ -34,15 +34,21 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.create_launchpad_tool i
 from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool_new import (
     delete_launchpad_tool_new,
 )
+from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool import (
+    delete_launchpad_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.delete_cluster_tool import (
+    delete_cluster_tool,
+)
 
 # Create and delete tools for project management
 CREATE_DELETE_TOOLS = [
     create_devbox_tool,
     delete_devbox_tool,
     create_cluster_tool,
-    delete_cluster_tool_new,
+    delete_cluster_tool,
     create_launchpad_tool,
-    delete_launchpad_tool_new,
+    delete_launchpad_tool,
 ]
 
 tools = CREATE_DELETE_TOOLS
