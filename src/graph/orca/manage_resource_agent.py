@@ -47,6 +47,9 @@ from src.graph.orca.tools.manage_resource_tool.devbox.start_devbox_tool import (
 from src.graph.orca.tools.manage_resource_tool.devbox.pause_devbox_tool import (
     pause_devbox_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.devbox.autostart_devbox_tool import (
+    autostart_devbox_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.cluster.get_cluster_tool import (
     get_cluster_tool,
 )
@@ -118,6 +121,7 @@ DEVBOX_TOOLS = [
     delete_devbox_ports_tool,
     start_devbox_tool,
     pause_devbox_tool,
+    autostart_devbox_tool,
 ]
 
 CLUSTER_TOOLS = [

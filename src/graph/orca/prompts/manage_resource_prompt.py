@@ -53,6 +53,7 @@ Depending on the resource type, you have the following tools:
 * **Lifecycle Management**:
   - `start_devbox_tool` - Start a DevBox instance.
   - `pause_devbox_tool` - Pause a DevBox instance.
+  - `autostart_devbox_tool` - Enable autostart for a DevBox instance. This tool can launch a DevBox and execute its underlying `entrypoint.sh` script. It is especially useful when a DevBox's network is not accessible, as it can help restore connectivity by restarting the instance and its entrypoint.
 * **Note**: To create or delete DevBox instances, please use the project chat.
 
 ### Database Resource Tools

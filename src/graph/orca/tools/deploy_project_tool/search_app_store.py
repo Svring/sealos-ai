@@ -161,7 +161,7 @@ def search_app_store(keywords: str) -> Dict[str, Any]:
 
         # Find most relevant templates using TF-IDF similarity
         relevant_segments = find_relevant_text_segments(
-            text_segments, keyword_list, top_k=3
+            text_segments, keyword_list, top_k=7
         )
 
         # Map back to original template data and process
