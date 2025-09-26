@@ -9,12 +9,15 @@ import asyncio
 
 
 @tool
-async def propose_template_deployment(template_name: str) -> Dict[str, Any]:
+async def propose_template_deployment(
+    template_name: str, project_name: str
+) -> Dict[str, Any]:
     """
     Propose deployment of a template from the App Store. Need to be reviewed and confirmed by the user.
 
     Args:
         template_name (str): Name of the template to deploy from the App Store
+        project_name (str): Name of the project for this template deployment
 
     Returns:
         Dict containing the action and payload for template deployment
@@ -23,6 +26,7 @@ async def propose_template_deployment(template_name: str) -> Dict[str, Any]:
         "action": "propose_template_deployment",
         "payload": {
             "template_name": template_name,
+            "project_name": project_name,
         },
     }
 
@@ -35,7 +39,7 @@ if __name__ == "__main__":
         print("Testing propose_template_deployment...")
         try:
             result = await propose_template_deployment.ainvoke(
-                {"template_name": "nginx-template"}
+                {"template_name": "nginx-template", "project_name": "test-project"}
             )
             print("✅ Template deployment proposal successful!")
             print(f"Result: {result}")

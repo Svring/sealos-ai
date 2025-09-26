@@ -11,6 +11,8 @@ import asyncio
 @tool
 async def propose_image_deployment(
     image_name: str,
+    project_name: str,
+    name: str,
     ports: Optional[List[int]] = None,
 ) -> Dict[str, Any]:
     """
@@ -18,6 +20,8 @@ async def propose_image_deployment(
 
     Args:
         image_name (str): Docker image name (e.g., nginx:latest, node:18-alpine)
+        project_name (str): Name of the project for this image deployment
+        name (str): Name of the application/container instance
         ports (Optional[List[int]]): List of port numbers to expose for access
 
     Returns:
@@ -27,6 +31,8 @@ async def propose_image_deployment(
         "action": "propose_image_deployment",
         "payload": {
             "image_name": image_name,
+            "project_name": project_name,
+            "name": name,
             "ports": ports,
         },
     }
@@ -41,21 +47,35 @@ if __name__ == "__main__":
         try:
             # Test with ports
             result1 = await propose_image_deployment.ainvoke(
-                {"image_name": "nginx:latest", "ports": [80, 443]}
+                {
+                    "image_name": "nginx:latest",
+                    "project_name": "web-project",
+                    "name": "nginx-app",
+                    "ports": [80, 443],
+                }
             )
             print("✅ Image deployment proposal (with ports) successful!")
             print(f"Result: {result1}")
 
             # Test without ports
             result2 = await propose_image_deployment.ainvoke(
-                {"image_name": "node:18-alpine"}
+                {
+                    "image_name": "node:18-alpine",
+                    "project_name": "api-project",
+                    "name": "node-app",
+                }
             )
             print("✅ Image deployment proposal (without ports) successful!")
             print(f"Result: {result2}")
 
             # Test with single port
             result3 = await propose_image_deployment.ainvoke(
-                {"image_name": "myapp:latest", "ports": [8080]}
+                {
+                    "image_name": "myapp:latest",
+                    "project_name": "custom-project",
+                    "name": "my-app",
+                    "ports": [8080],
+                }
             )
             print("✅ Image deployment proposal (single port) successful!")
             print(f"Result: {result3}")

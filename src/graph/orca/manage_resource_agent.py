@@ -23,6 +23,12 @@ from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_tool import (
 from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_monitor_tool import (
     get_devbox_monitor_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.devbox.deploy_devbox_release_tool import (
+    deploy_devbox_release_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_release_tool import (
+    get_devbox_release_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.devbox.get_devbox_network_tool import (
     get_devbox_network_tool,
 )
@@ -113,6 +119,8 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool i
 DEVBOX_TOOLS = [
     get_devbox_tool,
     get_devbox_monitor_tool,
+    deploy_devbox_release_tool,
+    get_devbox_release_tool,
     get_devbox_network_tool,
     update_devbox_tool,
     create_devbox_ports_tool,

@@ -8,6 +8,7 @@ from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
 from langgraph.types import interrupt
+from pydantic import BaseModel, Field
 
 from src.utils.sealos.extract_context import extract_sealos_context
 from src.utils.interrupt_utils import (
@@ -22,6 +23,13 @@ from src.lib.brain.sealos.launchpad.create import (
 )
 
 
+class EnvVar(BaseModel):
+    """Environment variable model."""
+
+    name: str = Field(..., description="Environment variable name")
+    value: str = Field(..., description="Environment variable value")
+
+
 @tool
 async def create_launchpad_tool(
     name: str,
@@ -30,7 +38,7 @@ async def create_launchpad_tool(
     cpu: int = 2,
     memory: int = 2,
     ports: Optional[List[int]] = None,
-    env: Optional[List[tuple[str, str]]] = None,
+    env: Optional[List[EnvVar]] = None,
 ) -> Dict[str, Any]:
     """
     Create a new app launchpad instance.
@@ -44,7 +52,7 @@ async def create_launchpad_tool(
         cpu: CPU allocation in cores (default: 2)
         memory: Memory allocation in GB (default: 2)
         ports: Array of port numbers to expose (optional)
-        env: Array of environment variable tuples (name, value) (optional)
+        env: Array of environment variables (optional)
 
     Returns:
         Dict containing the app launchpad creation operation result
@@ -97,6 +105,15 @@ async def create_launchpad_tool(
     # Convert to brain context
     brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
+    # Convert env_vars to tuples for the API
+    env_var_tuples = []
+    if env:
+        for env_var in env:
+            if isinstance(env_var, dict):
+                env_var_tuples.append((env_var["name"], env_var["value"]))
+            else:
+                env_var_tuples.append((env_var.name, env_var.value))
+
     # Create launchpad data
     create_data = LaunchpadCreateData(
         name=launchpad_name,
@@ -104,7 +121,7 @@ async def create_launchpad_tool(
         cpu=cpu,
         memory=memory,
         ports=ports,
-        env=env,
+        env=env_var_tuples,
     )
 
     try:
@@ -154,7 +171,10 @@ if __name__ == "__main__":
                 "cpu": 2,
                 "memory": 4,
                 "ports": [80, 443],
-                "env": [("ENV", "production"), ("DEBUG", "false")],
+                "env": [
+                    EnvVar(name="ENV", value="production"),
+                    EnvVar(name="DEBUG", value="false"),
+                ],
                 "state": mock_state,
             }
         )
