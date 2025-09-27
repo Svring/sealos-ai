@@ -34,9 +34,9 @@ async def create_cluster_tool(
         "kafka",
         "milvus",
     ],
-    cpu: int = 2,
-    memory: int = 2,
-    storage: int = 10,
+    cpu: float = 0.5,
+    memory: float = 0.5,
+    storage: int = 1,
     replicas: int = 1,
 ) -> Dict[str, Any]:
     """
@@ -48,9 +48,9 @@ async def create_cluster_tool(
     Args:
         name: Name of the database to create
         type: Database type
-        cpu: CPU allocation in cores (default: 2)
-        memory: Memory allocation in GB (default: 2)
-        storage: Storage allocation in GB (default: 10)
+        cpu: CPU allocation in cores (default: 0.5)
+        memory: Memory allocation in GB (default: 0.5)
+        storage: Storage allocation in GB (default: 1)
         replicas: Number of replicas (default: 1)
 
     Returns:
@@ -158,9 +158,9 @@ if __name__ == "__main__":
             {
                 "name": "test-cluster",
                 "type": "postgresql",
-                "cpu": 2,
-                "memory": 4,
-                "storage": 20,
+                "cpu": 0.5,
+                "memory": 0.5,
+                "storage": 1,
                 "replicas": 1,
                 "state": mock_state,
             }

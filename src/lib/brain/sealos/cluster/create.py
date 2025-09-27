@@ -40,8 +40,8 @@ class ClusterCreateData(BaseModel):
         "milvus",
     ] = Field(..., description="Cluster type")
 
-    cpu: Optional[int] = Field(2, description="CPU allocation in cores")
-    memory: Optional[int] = Field(2, description="Memory allocation in GB")
+    cpu: Optional[float] = Field(0.5, description="CPU allocation in cores")
+    memory: Optional[float] = Field(0.5, description="Memory allocation in GB")
     storage: Optional[int] = Field(10, description="Storage allocation in GB")
     replicas: Optional[int] = Field(1, description="Number of replicas")
 
@@ -93,15 +93,15 @@ def create_cluster(
 if __name__ == "__main__":
     # Test variables
     context = BrainClusterContext(
-        kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
+        kubeconfig=os.getenv("USW_KC", "/path/to/your/kubeconfig"),
     )
 
     create_data = ClusterCreateData(
-        name="test-cluster",
+        name="test-clusterbn",
         type="postgresql",
-        cpu=2,
-        memory=4,
-        storage=20,
+        cpu=0.5,
+        memory=0.5,
+        storage=1,
         replicas=1,
     )
 

@@ -101,6 +101,9 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_env_to
 from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_image_tool import (
     update_launchpad_image_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.launchpad.update_launchpad_command_tool import (
+    update_launchpad_command_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.launchpad.start_launchpad_tool import (
     start_launchpad_tool,
 )
@@ -145,6 +148,7 @@ LAUNCHPAD_TOOLS = [
     delete_launchpad_env_tool,
     update_launchpad_env_tool,
     update_launchpad_image_tool,
+    update_launchpad_command_tool,
     start_launchpad_tool,
     pause_launchpad_tool,
 ]
@@ -251,7 +255,7 @@ async def manage_resource_agent(
             + messages
         )
 
-        print(message_list)
+        # print(message_list)
 
         # Get model response
         response = await model_with_tools.ainvoke(message_list)

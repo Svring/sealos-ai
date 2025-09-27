@@ -4,7 +4,6 @@ Context utilities for extracting values from config and state objects.
 
 from typing import Any, Dict, List, Union
 from langchain_core.runnables import RunnableConfig
-from copilotkit import CopilotKitState
 
 
 def get_config_value(config: RunnableConfig, key: str, default: Any = None) -> Any:
@@ -45,7 +44,7 @@ def get_config_values(
         raise ValueError("keys must be either a list or a dict")
 
 
-def get_state_value(state: CopilotKitState, key: str, default: Any = None) -> Any:
+def get_state_value(state: dict, key: str, default: Any = None) -> Any:
     """
     Extract a value from the state object.
 
@@ -60,9 +59,7 @@ def get_state_value(state: CopilotKitState, key: str, default: Any = None) -> An
     return state.get(key, default)
 
 
-def get_state_values(
-    state: CopilotKitState, keys: Union[List[str], Dict[str, Any]]
-) -> tuple:
+def get_state_values(state: dict, keys: Union[List[str], Dict[str, Any]]) -> tuple:
     """
     Extract multiple values from the state object.
 
@@ -83,7 +80,7 @@ def get_state_values(
         raise ValueError("keys must be either a list or a dict")
 
 
-def get_copilot_actions(state: CopilotKitState) -> list:
+def get_copilot_actions(state: dict) -> list:
     """
     Extract CopilotKit actions from state.
 
@@ -97,7 +94,7 @@ def get_copilot_actions(state: CopilotKitState) -> list:
     return copilotkit.get("actions", [])
 
 
-def has_copilot_actions(state: CopilotKitState) -> bool:
+def has_copilot_actions(state: dict) -> bool:
     """
     Check if state has CopilotKit actions.
 

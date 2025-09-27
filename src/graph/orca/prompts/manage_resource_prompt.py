@@ -84,6 +84,8 @@ Depending on the resource type, you have the following tools:
   - `delete_launchpad_env_tool` - Delete environment variables (list of environment variable names).
 * **Image Management**:
   - `update_launchpad_image_tool` - Update the application image.
+* **Command Management**:
+  - `update_launchpad_command_tool` - Update the command and arguments for the application. Before calling this tool, you MUST ask the user to specify both the 'command' and 'args' separately. Do not attempt to automatically determine or split the command and arguments. Ask the user questions like "What command would you like to use?" and "What arguments would you like to pass to the command?" Both command and args must be provided as strings, not lists.
 * **Lifecycle Management**:
   - `start_launchpad_tool` - Start an application instance.
   - `pause_launchpad_tool` - Pause an application instance.
@@ -107,6 +109,7 @@ Depending on the resource type, you have the following tools:
 2. **Port Management**: Create or delete ports for DevBox and App Launchpad.
 3. **Environment Variables**: Manage environment variables for App Launchpad (create, update, delete).
 4. **Image Updates**: Update application images for App Launchpad.
+5. **Command Updates**: Update the command and arguments for App Launchpad applications. Before calling the tool, you MUST ask the user to specify both the 'command' and 'args' separately. Do not attempt to automatically determine or split the command and arguments. Ask the user questions like "What command would you like to use?" and "What arguments would you like to pass to the command?" Both command and args must be provided as strings, not lists.
 
 ### Release Management (DevBox Only)
 1. **View Releases**: Use `get_devbox_release_tool` to display available releases and show UI for release management. Always inform users that they need to manage their releases manually.

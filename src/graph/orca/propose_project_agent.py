@@ -16,7 +16,6 @@ from src.graph.orca.tools.propose_project_tools import propose_project
 from src.graph.orca.prompts.propose_project_prompt import (
     PROPOSE_PROJECT_REQUIREMENT_PROMPT,
 )
-from copilotkit.langgraph import copilotkit_customize_config
 
 
 async def propose_project_agent(
@@ -45,14 +44,6 @@ async def propose_project_agent(
             },
         )
 
-        print("kubeconfig", kubeconfig)
-
-        modifiedConfig = copilotkit_customize_config(
-            config,
-            emit_messages=False,  # if you want to disable message streaming
-            # emit_tool_calls=False,  # if you want to disable tool call streaming
-        )
-
         model = get_sealos_model(
             base_url=base_url, api_key=api_key, model_name=model_name
         )
@@ -71,7 +62,7 @@ async def propose_project_agent(
             message_list.extend(messages)
 
         # Get model response
-        response = await model_with_tools.ainvoke(message_list, modifiedConfig)
+        response = await model_with_tools.ainvoke(message_list)
 
         # Check if the response contains tool calls
         if hasattr(response, "tool_calls") and response.tool_calls:

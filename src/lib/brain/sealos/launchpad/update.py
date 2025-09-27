@@ -47,6 +47,10 @@ class LaunchpadUpdateData(BaseModel):
         description="Array of environment variable tuples (name, value) to update",
     )
     updateImage: Optional[str] = Field(None, description="Image name to update to")
+    updateCommand: Optional[Tuple[str, str]] = Field(
+        None,
+        description="Command and arguments tuple (command, args) to update",
+    )
     # Add other fields as needed based on the actual launchpadUpdateFormSchema
 
 
@@ -128,6 +132,7 @@ if __name__ == "__main__":
         deleteEnv=["API_KEY", "DEBUG"],
         # updateEnv=[("API_KEY", "new-secret-key"), ("DEBUG", "false")],
         # updateImage="nginx:1.25-alpine",
+        # updateCommand=("python", "app.py --port 8080"),
     )
 
     print(f"Test data: {test_update.model_dump(by_alias=True, exclude_none=True)}")

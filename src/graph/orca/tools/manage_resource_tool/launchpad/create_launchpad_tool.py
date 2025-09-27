@@ -35,8 +35,8 @@ async def create_launchpad_tool(
     name: str,
     image: str,
     state: Annotated[dict, InjectedState],
-    cpu: int = 2,
-    memory: int = 2,
+    cpu: int = 1,
+    memory: int = 1,
     ports: Optional[List[int]] = None,
     env: Optional[List[EnvVar]] = None,
 ) -> Dict[str, Any]:
@@ -49,8 +49,8 @@ async def create_launchpad_tool(
     Args:
         name: Name of the app launchpad to create
         image: Docker image name
-        cpu: CPU allocation in cores (default: 2)
-        memory: Memory allocation in GB (default: 2)
+        cpu: CPU allocation in cores (default: 1)
+        memory: Memory allocation in GB (default: 1)
         ports: Array of port numbers to expose (optional)
         env: Array of environment variables (optional)
 

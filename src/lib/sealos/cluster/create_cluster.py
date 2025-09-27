@@ -15,8 +15,8 @@ load_dotenv()
 class ClusterResource(BaseModel):
     """Resource allocation for cluster."""
 
-    cpu: int = Field(..., alias="cpu", description="CPU allocation in cores")
-    memory: int = Field(..., alias="memory", description="Memory allocation in GB")
+    cpu: float = Field(..., alias="cpu", description="CPU allocation in cores")
+    memory: float = Field(..., alias="memory", description="Memory allocation in GB")
     replicas: int = Field(..., alias="replicas", description="Number of replicas")
     storage: int = Field(..., alias="storage", description="Storage allocation in GB")
 
@@ -94,14 +94,14 @@ def create_cluster(
 if __name__ == "__main__":
     # Test variables
     context = ClusterContext(
-        kubeconfig=os.getenv("35_KC", "/path/to/your/kubeconfig"),
-        regionUrl=os.getenv("35_REGION_URL", "192.168.10.35.nip.io"),
+        kubeconfig=os.getenv("USW_KC", "/path/to/your/kubeconfig"),
+        regionUrl=os.getenv("USW_REGION_URL", "192.168.10.35.nip.io"),
     )
 
     payload = ClusterCreatePayload(
-        name="test-cluster",
+        name="test-clusterbn",
         type="postgresql",
-        resource=ClusterResource(cpu=2, memory=4, replicas=1, storage=3),
+        resource=ClusterResource(cpu=0.5, memory=0.5, replicas=1, storage=1),
     )
 
     # Test the function

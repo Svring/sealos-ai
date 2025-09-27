@@ -62,7 +62,7 @@ async def create_devbox_tool(
         "rust",
     ],
     cpu: int = 2,
-    memory: int = 2,
+    memory: int = 4,
     ports: Optional[List[int]] = None,
 ) -> Dict[str, Any]:
     """
