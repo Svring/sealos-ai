@@ -23,7 +23,7 @@ class BrainLaunchpadContext(BaseModel):
 class LaunchpadLifecycleAction(BaseModel):
     """Action for launchpad lifecycle operations."""
 
-    action: Literal["start", "pause", "delete"] = Field(
+    action: Literal["start", "pause", "restart", "delete"] = Field(
         ..., description="Lifecycle action to perform"
     )
 

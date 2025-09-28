@@ -23,7 +23,7 @@ class BrainClusterContext(BaseModel):
 class ClusterLifecycleAction(BaseModel):
     """Action for cluster lifecycle operations."""
 
-    action: Literal["start", "pause", "delete"] = Field(
+    action: Literal["start", "pause", "restart", "delete"] = Field(
         ..., description="Lifecycle action to perform"
     )
 

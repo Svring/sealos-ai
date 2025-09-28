@@ -22,8 +22,17 @@ async def autostart_devbox_tool(
     state: Annotated[dict, InjectedState],
 ) -> Dict[str, Any]:
     """
-    Enable autostart for a devbox instance.
-    This tool can be used when a devbox's network is not accessible to help restore connectivity.
+    Enable autostart for a devbox instance by executing its predefined entrypoint.sh script.
+
+    This tool executes a predefined entrypoint.sh script based on the devbox's runtime, which
+    starts a process listening on a port of the devbox. It is particularly useful for fixing
+    network access issues when a devbox is launched (pod active) but the program inside it
+    doesn't spawn a process to listen on the port that the external service is exposing.
+
+    **Network Issue Resolution:**
+    - If a devbox is paused: network access fails - use start_devbox_tool first
+    - If a devbox is started but no process is listening on ports: network access fails - use this autostart tool
+    - After executing autostart, wait for a moment as it takes time to take effect
 
     This tool should be invoked strictly for resources of kind 'devbox'.
     When referring to resources, always refer to devbox as 'devbox'.

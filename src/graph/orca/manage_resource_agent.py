@@ -50,6 +50,9 @@ from src.graph.orca.tools.manage_resource_tool.devbox.pause_devbox_tool import (
 from src.graph.orca.tools.manage_resource_tool.devbox.autostart_devbox_tool import (
     autostart_devbox_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.devbox.restart_devbox_tool import (
+    restart_devbox_tool,
+)
 from src.graph.orca.tools.manage_resource_tool.cluster.get_cluster_tool import (
     get_cluster_tool,
 )
@@ -67,6 +70,9 @@ from src.graph.orca.tools.manage_resource_tool.cluster.start_cluster_tool import
 )
 from src.graph.orca.tools.manage_resource_tool.cluster.pause_cluster_tool import (
     pause_cluster_tool,
+)
+from src.graph.orca.tools.manage_resource_tool.cluster.restart_cluster_tool import (
+    restart_cluster_tool,
 )
 from src.graph.orca.tools.manage_resource_tool.launchpad.get_launchpad_tool import (
     get_launchpad_tool,
@@ -110,6 +116,9 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.start_launchpad_tool im
 from src.graph.orca.tools.manage_resource_tool.launchpad.pause_launchpad_tool import (
     pause_launchpad_tool,
 )
+from src.graph.orca.tools.manage_resource_tool.launchpad.restart_launchpad_tool import (
+    restart_launchpad_tool,
+)
 
 
 # Tool sets for different resource types
@@ -124,6 +133,7 @@ DEVBOX_TOOLS = [
     delete_devbox_ports_tool,
     start_devbox_tool,
     pause_devbox_tool,
+    restart_devbox_tool,
     autostart_devbox_tool,
 ]
 
@@ -134,6 +144,7 @@ CLUSTER_TOOLS = [
     update_cluster_tool,
     start_cluster_tool,
     pause_cluster_tool,
+    restart_cluster_tool,
 ]
 
 LAUNCHPAD_TOOLS = [
@@ -151,6 +162,7 @@ LAUNCHPAD_TOOLS = [
     update_launchpad_command_tool,
     start_launchpad_tool,
     pause_launchpad_tool,
+    restart_launchpad_tool,
 ]
 
 tools = [
