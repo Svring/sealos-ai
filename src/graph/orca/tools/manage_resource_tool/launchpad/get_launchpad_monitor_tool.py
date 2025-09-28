@@ -7,13 +7,7 @@ from typing import Dict, Any
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
-from langgraph.types import interrupt
-
 from src.utils.sealos.extract_context import extract_sealos_context
-from src.utils.interrupt_utils import (
-    handle_interrupt_with_approval,
-    create_rejection_response,
-)
 from src.models.sealos.launchpad.launchpad_model import LaunchpadContext
 from src.lib.brain.sealos.launchpad.monitor import (
     get_launchpad_monitor,
@@ -44,32 +38,11 @@ async def get_launchpad_monitor_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
-    # Handle interrupt with approval and parameter editing
-    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
-        action="get_launchpad_monitor",
-        payload={
-            "launchpad_name": launchpad_name,
-            "step": step,
-        },
-        interrupt_func=interrupt,
-        original_params={
-            "launchpad_name": launchpad_name,
-            "step": step,
-        },
-    )
-
-    # Check if the operation was approved
-    if not is_approved:
-        return create_rejection_response(
-            action="get_launchpad_monitor",
-            response_payload=response_payload,
-            resource_name="app launchpad",
-            operation_type="Get Monitor",
-        )
-
-    # Extract the edited parameters
-    launchpad_name = edited_data.get("launchpad_name", launchpad_name)
-    step = edited_data.get("step", step)
+    # Prepare payload for response
+    payload = {
+        "launchpad_name": launchpad_name,
+        "step": step,
+    }
 
     context = extract_sealos_context(state, LaunchpadContext)
 
@@ -82,7 +55,7 @@ async def get_launchpad_monitor_tool(
 
         return {
             "action": "get_launchpad_monitor",
-            "payload": edited_data,
+            "payload": payload,
             "success": True,
             "result": result,
             "message": f"Successfully retrieved monitoring data for launchpad '{launchpad_name}'",
@@ -90,7 +63,7 @@ async def get_launchpad_monitor_tool(
     except Exception as e:
         return {
             "action": "get_launchpad_monitor",
-            "payload": edited_data,
+            "payload": payload,
             "success": False,
             "error": str(e),
             "message": f"Failed to get monitoring data for launchpad '{launchpad_name}': {str(e)}",

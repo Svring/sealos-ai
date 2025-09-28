@@ -7,13 +7,7 @@ from typing import Dict, Any
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
-from langgraph.types import interrupt
-
 from src.utils.sealos.extract_context import extract_sealos_context
-from src.utils.interrupt_utils import (
-    handle_interrupt_with_approval,
-    create_rejection_response,
-)
 from src.models.sealos.cluster.cluster_model import ClusterContext
 from src.lib.brain.sealos.cluster.monitor import (
     get_cluster_monitor,
@@ -44,32 +38,11 @@ async def get_cluster_monitor_tool(
         ValueError: If required state values are missing
         requests.RequestException: If the API request fails
     """
-    # Handle interrupt with approval and parameter editing
-    is_approved, edited_data, response_payload = handle_interrupt_with_approval(
-        action="get_cluster_monitor",
-        payload={
-            "cluster_name": cluster_name,
-            "db_type": db_type,
-        },
-        interrupt_func=interrupt,
-        original_params={
-            "cluster_name": cluster_name,
-            "db_type": db_type,
-        },
-    )
-
-    # Check if the operation was approved
-    if not is_approved:
-        return create_rejection_response(
-            action="get_cluster_monitor",
-            response_payload=response_payload,
-            resource_name="database",
-            operation_type="Get Monitor",
-        )
-
-    # Extract the edited parameters
-    cluster_name = edited_data.get("cluster_name", cluster_name)
-    db_type = edited_data.get("db_type", db_type)
+    # Prepare payload for response
+    payload = {
+        "cluster_name": cluster_name,
+        "db_type": db_type,
+    }
 
     context = extract_sealos_context(state, ClusterContext)
 
@@ -82,7 +55,7 @@ async def get_cluster_monitor_tool(
 
         return {
             "action": "get_cluster_monitor",
-            "payload": edited_data,
+            "payload": payload,
             "success": True,
             "result": result,
             "message": f"Successfully retrieved monitoring data for cluster '{cluster_name}'",
@@ -90,7 +63,7 @@ async def get_cluster_monitor_tool(
     except Exception as e:
         return {
             "action": "get_cluster_monitor",
-            "payload": edited_data,
+            "payload": payload,
             "success": False,
             "error": str(e),
             "message": f"Failed to get monitoring data for cluster '{cluster_name}': {str(e)}",
