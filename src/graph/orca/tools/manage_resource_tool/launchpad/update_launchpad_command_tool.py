@@ -42,20 +42,27 @@ async def update_launchpad_command_tool(
     This tool should be invoked strictly for resources of kind 'deployment' and 'statefulset'.
     When referring to resources, always refer to launchpad as 'app launchpad'.
 
-    IMPORTANT: Before calling this tool, you MUST ask the user to specify both the 'command' and 'args' separately.
-    Do not attempt to automatically determine or split the command and arguments from the user's request.
+    IMPORTANT: The model should determine the command and args by itself from the user's request
+    and call this tool directly. Do not ask the user to specify command and args separately.
+    The user can modify the proposed values through the approval interface if needed.
 
-    Ask the user questions like:
-    - "What command would you like to use? (e.g., 'python', 'node', 'java -jar')"
-    - "What arguments would you like to pass to the command? (e.g., 'app.py', 'server.js --port 3000')"
+    CRITICAL: The values proposed by the model can be modified by the user at any time
+    during the approval process. The model should keep this in mind and always use the
+    actual result from this tool as the true modification applied.
 
-    Examples of how to ask:
-    - If user says "set command to python -m npm.py", ask: "I need to separate the command and arguments. What should be the command part? (e.g., 'python -m') and what should be the arguments part? (e.g., 'npm.py')"
-    - If user says "update to node server.js", ask: "Please specify the command (e.g., 'node') and the arguments (e.g., 'server.js') separately."
+    IMPORTANT PRINCIPLE: When the user's intention is ambiguous (e.g., "I'd like to update command"
+    instead of "I'd like to update command to python app.py"), the model should still invoke this tool
+    with reasonable default values or current command values. This allows the user to modify the data
+    themselves through the approval interface.
+
+    Examples of how to determine command and args:
+    - User says "set command to python -m app.py" → command="python -m", args="app.py"
+    - User says "update to node server.js --port 3000" → command="node", args="server.js --port 3000"
+    - User says "change to java -jar myapp.jar" → command="java -jar", args="myapp.jar"
 
     IMPORTANT: Both command and args must be provided as strings, not lists. For example:
-    - Correct: args="npm.py"
-    - Incorrect: args=["npm.py"]
+    - Correct: args="app.py"
+    - Incorrect: args=["app.py"]
 
     Args:
         launchpad_name: Name of the app launchpad to update the command for
@@ -94,6 +101,8 @@ async def update_launchpad_command_tool(
     # Extract the edited parameters
     launchpad_name = edited_data.get("launchpad_name", launchpad_name)
     launch_command = edited_data.get("launch_command", launch_command)
+
+    # print(f"launch_command: {launch_command}")
 
     # Extract command and args from the LaunchCommand object
     if isinstance(launch_command, dict):
