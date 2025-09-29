@@ -18,10 +18,16 @@ async def propose_image_deployment(
     """
     Propose deployment of a Docker image with specified ports. Need to be reviewed and confirmed by the user.
 
+    IMPORTANT: When calling this tool, make sure to add random characters
+    to the end of all resource names to avoid name collisions with existing
+    resources. For example, if you want to create a project called "my-project",
+    append something like "my-project-abc123" or "my-project-xyz789" to make it unique.
+    This applies to project names and application names.
+
     Args:
         image_name (str): Docker image name (e.g., nginx:latest, node:18-alpine)
-        project_name (str): Name of the project for this image deployment
-        name (str): Name of the application/container instance
+        project_name (str): Name of the project for this image deployment (add random characters to avoid collisions)
+        name (str): Name of the application/container instance (add random characters to avoid collisions)
         ports (Optional[List[int]]): List of port numbers to expose for access
 
     Returns:

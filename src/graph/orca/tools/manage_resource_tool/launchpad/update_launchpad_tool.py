@@ -23,6 +23,10 @@ from src.lib.brain.sealos.launchpad.update import (
     BrainLaunchpadContext,
     LaunchpadUpdateData,
 )
+from src.lib.brain.sealos.launchpad.get import (
+    get_launchpad,
+    BrainLaunchpadContext as GetLaunchpadContext,
+)
 
 
 @tool
@@ -42,6 +46,18 @@ async def update_launchpad_tool(
     IMPORTANT: Both cpu and memory parameters are necessary for invoking this tool.
     When the user asks for only one resource update, the model should take the
     current value of the other resource field from the resource context.
+
+    CRITICAL: The values proposed by the model can be modified by the user at any time
+    during the approval process. The model should keep this in mind and always use the
+    actual result from this tool as the true modification applied. For example, if the
+    model proposes 2 CPU cores and 2GB memory, but the result shows 2 CPU cores and 4GB
+    memory, the model should understand that the user has modified the proposed values.
+
+    IMPORTANT PRINCIPLE: When the user's intention is ambiguous (e.g., "I'd like to update app launchpad"
+    instead of "I'd like to update app launchpad to 2c 4g"), the model should still invoke this tool
+    with the current resource quota of the app launchpad (which would be sent to the model along with
+    the request). This allows the user to modify the data themselves through the approval interface.
+    This principle applies to all update operations where users don't specify detailed parameters.
 
     Args:
         launchpad_name: Name of the app launchpad to update
@@ -91,6 +107,14 @@ async def update_launchpad_tool(
     # Convert to brain context
     brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
+    # Get current launchpad state before update
+    before_update = None
+    try:
+        get_context = GetLaunchpadContext(kubeconfig=context.kubeconfig)
+        before_update = get_launchpad(get_context, launchpad_name)
+    except Exception as e:
+        print(f"Warning: Could not fetch current launchpad state: {e}")
+
     # Create update data
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
@@ -104,7 +128,10 @@ async def update_launchpad_tool(
 
         return {
             "action": "update_launchpad",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": True,
             "approved": True,
             "result": result,
@@ -113,7 +140,10 @@ async def update_launchpad_tool(
     except Exception as e:
         return {
             "action": "update_launchpad",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": False,
             "approved": True,
             "error": str(e),

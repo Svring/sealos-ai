@@ -118,8 +118,14 @@ async def propose_devenv_deployment(
     """
     Propose deployment of a development environment with one or more DevBox instances and/or databases. Need to be reviewed and confirmed by the user.
 
+    IMPORTANT: When calling this tool, make sure to add random characters
+    to the end of all resource names to avoid name collisions with existing
+    resources. For example, if you want to create a project called "my-project",
+    append something like "my-project-abc123" or "my-project-xyz789" to make it unique.
+    This applies to project names, DevBox names, and Database names.
+
     Args:
-        project_name (str): Name of the project for this development environment deployment.
+        project_name (str): Name of the project for this development environment deployment (add random characters to avoid collisions).
         devbox (Optional[List[DeployDevBox]]): List of DevBox configurations for development environments. Can deploy multiple DevBox instances.
         database (Optional[List[DeployDatabase]]): List of database configurations for the development environment. Can deploy multiple databases.
 

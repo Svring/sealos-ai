@@ -46,8 +46,13 @@ async def create_launchpad_tool(
     This tool should be invoked strictly for resources of kind 'deployment' and 'statefulset'.
     When referring to resources, always refer to launchpad as 'app launchpad'.
 
+    IMPORTANT: When you call this tool, make sure to add random characters
+    to the end of the name you provide to avoid name collisions with existing
+    resources. For example, if you want to create a launchpad called "my-app",
+    append something like "my-app-abc123" or "my-app-xyz789" to make it unique.
+
     Args:
-        name: Name of the app launchpad to create
+        name: Name of the app launchpad to create (add random characters to avoid collisions)
         image: Docker image name
         cpu: CPU allocation in cores (default: 1)
         memory: Memory allocation in GB (default: 1)

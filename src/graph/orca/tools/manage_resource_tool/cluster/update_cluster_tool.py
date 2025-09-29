@@ -6,7 +6,6 @@ Handles cluster configuration updates with state management.
 from typing import Optional, Dict, Any, Literal
 from typing_extensions import Annotated
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
 from langgraph.prebuilt import InjectedState
 from langgraph.types import interrupt
 
@@ -17,13 +16,15 @@ from src.utils.interrupt_utils import (
 )
 from src.models.sealos.cluster.cluster_model import (
     ClusterContext,
-    ClusterUpdatePayload,
-    ClusterResource,
 )
 from src.lib.brain.sealos.cluster.update import (
     update_cluster,
     BrainClusterContext,
     ClusterUpdateData,
+)
+from src.lib.brain.sealos.cluster.get import (
+    get_cluster,
+    BrainClusterContext as GetClusterContext,
 )
 
 
@@ -45,6 +46,18 @@ async def update_cluster_tool(
     IMPORTANT: All resource parameters (cpu, memory, replicas, storage) are necessary
     for invoking this tool. When the user asks for only one resource update, the model
     should take the current values of the other resource fields from the resource context.
+
+    CRITICAL: The values proposed by the model can be modified by the user at any time
+    during the approval process. The model should keep this in mind and always use the
+    actual result from this tool as the true modification applied. For example, if the
+    model proposes 2 CPU cores and 2GB memory, but the result shows 2 CPU cores and 4GB
+    memory, the model should understand that the user has modified the proposed values.
+
+    IMPORTANT PRINCIPLE: When the user's intention is ambiguous (e.g., "I'd like to update database"
+    instead of "I'd like to update database to 2c 4g"), the model should still invoke this tool
+    with the current resource quota of the database (which would be sent to the model along with
+    the request). This allows the user to modify the data themselves through the approval interface.
+    This principle applies to all update operations where users don't specify detailed parameters.
 
     Args:
         cluster_name: Name of the database to update
@@ -101,6 +114,14 @@ async def update_cluster_tool(
     # Convert to brain context
     brain_context = BrainClusterContext(kubeconfig=context.kubeconfig)
 
+    # Get current cluster state before update
+    before_update = None
+    try:
+        get_context = GetClusterContext(kubeconfig=context.kubeconfig)
+        before_update = get_cluster(get_context, cluster_name)
+    except Exception as e:
+        print(f"Warning: Could not fetch current cluster state: {e}")
+
     # Create update data
     update_data = ClusterUpdateData(
         name=cluster_name,
@@ -114,7 +135,10 @@ async def update_cluster_tool(
 
         return {
             "action": "update_cluster",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": True,
             "approved": True,
             "result": result,
@@ -123,7 +147,10 @@ async def update_cluster_tool(
     except Exception as e:
         return {
             "action": "update_cluster",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": False,
             "approved": True,
             "error": str(e),

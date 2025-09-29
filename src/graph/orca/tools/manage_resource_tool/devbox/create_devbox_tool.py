@@ -71,8 +71,13 @@ async def create_devbox_tool(
     This tool should be invoked strictly for resources of kind 'devbox'.
     When referring to resources, always refer to devbox as 'devbox'.
 
+    IMPORTANT: When you call this tool, make sure to add random characters
+    to the end of the name you provide to avoid name collisions with existing
+    resources. For example, if you want to create a devbox called "my-devbox",
+    append something like "my-devbox-abc123" or "my-devbox-xyz789" to make it unique.
+
     Args:
-        name: Name of the devbox to create
+        name: Name of the devbox to create (add random characters to avoid collisions)
         runtime: Runtime environment name
         cpu: CPU allocation in cores (default: 2)
         memory: Memory allocation in GB (default: 2)

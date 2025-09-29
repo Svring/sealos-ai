@@ -15,9 +15,14 @@ async def propose_template_deployment(
     """
     Propose deployment of a template from the App Store. Need to be reviewed and confirmed by the user.
 
+    IMPORTANT: When calling this tool, make sure to add random characters
+    to the end of the project name to avoid name collisions with existing
+    projects. For example, if you want to create a project called "my-project",
+    append something like "my-project-abc123" or "my-project-xyz789" to make it unique.
+
     Args:
         template_name (str): Name of the template to deploy from the App Store
-        project_name (str): Name of the project for this template deployment
+        project_name (str): Name of the project for this template deployment (add random characters to avoid collisions)
 
     Returns:
         Dict containing the action and payload for template deployment

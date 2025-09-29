@@ -45,8 +45,13 @@ async def create_cluster_tool(
     This tool should be invoked strictly for resources of kind 'cluster'.
     When referring to resources, always refer to cluster as 'database'.
 
+    IMPORTANT: When you call this tool, make sure to add random characters
+    to the end of the name you provide to avoid name collisions with existing
+    resources. For example, if you want to create a database called "my-db",
+    append something like "my-db-abc123" or "my-db-xyz789" to make it unique.
+
     Args:
-        name: Name of the database to create
+        name: Name of the database to create (add random characters to avoid collisions)
         type: Database type
         cpu: CPU allocation in cores (default: 0.5)
         memory: Memory allocation in GB (default: 0.5)
