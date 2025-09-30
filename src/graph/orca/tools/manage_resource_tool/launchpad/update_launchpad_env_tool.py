@@ -21,6 +21,10 @@ from src.lib.brain.sealos.launchpad.update import (
     BrainLaunchpadContext,
     LaunchpadUpdateData,
 )
+from src.lib.brain.sealos.launchpad.get import (
+    get_launchpad,
+    BrainLaunchpadContext as GetLaunchpadContext,
+)
 
 
 class EnvVar(BaseModel):
@@ -85,6 +89,14 @@ async def update_launchpad_env_tool(
     # Convert to brain context
     brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
+    # Get current launchpad state before update
+    before_update = None
+    try:
+        get_context = GetLaunchpadContext(kubeconfig=context.kubeconfig)
+        before_update = get_launchpad(get_context, launchpad_name)
+    except Exception as e:
+        print(f"Warning: Could not fetch current launchpad state: {e}")
+
     # Convert env_vars to tuples for the API
     # env_vars can be either EnvVar objects or dictionaries depending on how the tool is called
     env_var_tuples = []
@@ -106,7 +118,10 @@ async def update_launchpad_env_tool(
 
         return {
             "action": "update_launchpad_env",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": True,
             "approved": True,
             "result": result,
@@ -115,7 +130,10 @@ async def update_launchpad_env_tool(
     except Exception as e:
         return {
             "action": "update_launchpad_env",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": False,
             "approved": True,
             "error": str(e),

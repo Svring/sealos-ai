@@ -20,6 +20,10 @@ from src.lib.brain.sealos.launchpad.update import (
     BrainLaunchpadContext,
     LaunchpadUpdateData,
 )
+from src.lib.brain.sealos.launchpad.get import (
+    get_launchpad,
+    BrainLaunchpadContext as GetLaunchpadContext,
+)
 
 
 @tool
@@ -77,6 +81,14 @@ async def update_launchpad_image_tool(
     # Convert to brain context
     brain_context = BrainLaunchpadContext(kubeconfig=context.kubeconfig)
 
+    # Get current launchpad state before update
+    before_update = None
+    try:
+        get_context = GetLaunchpadContext(kubeconfig=context.kubeconfig)
+        before_update = get_launchpad(get_context, launchpad_name)
+    except Exception as e:
+        print(f"Warning: Could not fetch current launchpad state: {e}")
+
     # Create update data with new image
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
@@ -89,7 +101,10 @@ async def update_launchpad_image_tool(
 
         return {
             "action": "update_launchpad_image",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": True,
             "approved": True,
             "result": result,
@@ -98,7 +113,10 @@ async def update_launchpad_image_tool(
     except Exception as e:
         return {
             "action": "update_launchpad_image",
-            "payload": edited_data,
+            "payload": {
+                **edited_data,
+                "before_update": before_update,
+            },
             "success": False,
             "approved": True,
             "error": str(e),

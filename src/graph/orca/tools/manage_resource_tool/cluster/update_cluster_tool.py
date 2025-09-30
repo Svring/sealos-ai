@@ -64,7 +64,7 @@ async def update_cluster_tool(
         cpu: CPU allocation in cores (1, 2, 4, or 8) - REQUIRED
         memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32) - REQUIRED
         replicas: Number of replicas (1-20) - REQUIRED
-        storage: Storage allocation in GB (3-300) - REQUIRED
+        storage: Storage allocation in GB (3-300) - REQUIRED. Note: Storage cannot be set to a shorter value than the current storage
 
     Returns:
         Dict containing the update operation result
@@ -127,6 +127,8 @@ async def update_cluster_tool(
         name=cluster_name,
         cpu=cpu,
         memory=memory,
+        replicas=replicas,
+        storage=storage,
     )
 
     try:

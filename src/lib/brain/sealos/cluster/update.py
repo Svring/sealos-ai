@@ -29,6 +29,7 @@ class ClusterUpdateData(BaseModel):
     cpu: Optional[int] = Field(None, description="CPU allocation")
     memory: Optional[int] = Field(None, description="Memory allocation")
     replicas: Optional[int] = Field(None, description="Number of replicas")
+    storage: Optional[int] = Field(None, description="Storage allocation in GB")
     # Add other fields as needed based on the actual clusterUpdateFormSchema
 
 

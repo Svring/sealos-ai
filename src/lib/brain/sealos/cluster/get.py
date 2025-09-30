@@ -62,12 +62,12 @@ def get_cluster(
 if __name__ == "__main__":
     # Test variables
     context = BrainClusterContext(
-        kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
+        kubeconfig=os.getenv("USW_KC", "/path/to/your/kubeconfig"),
     )
 
     # Test the function
     try:
-        result = get_cluster(context, "ai-postgresql")
+        result = get_cluster(context, "redis-db-302uhk")
         print(result)
     except Exception as e:
         print(f"Error getting cluster: {e}")

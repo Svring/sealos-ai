@@ -77,14 +77,14 @@ def cluster_lifecycle(
 if __name__ == "__main__":
     # Test variables
     context = BrainClusterContext(
-        kubeconfig=os.getenv("BJA_KC", "/path/to/your/kubeconfig"),
+        kubeconfig=os.getenv("USW_KC", "/path/to/your/kubeconfig"),
     )
 
-    action = ClusterLifecycleAction(action="delete")
+    action = ClusterLifecycleAction(action="start")
 
     # Test the function
     try:
-        result = cluster_lifecycle(context, "clusterakasdd", action)
+        result = cluster_lifecycle(context, "redis-db-302uhk", action)
         print(result)
     except Exception as e:
         print(f"Error performing cluster lifecycle action: {e}")
