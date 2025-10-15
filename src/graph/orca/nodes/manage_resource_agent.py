@@ -260,14 +260,13 @@ async def manage_resource_agent(
         context_emphasis = SystemMessage(
             content="IMPORTANT: The next message contains the newest resource context. Pay close attention to it as it reflects the current state of the resource, including any recent modifications like added ports, changed environment variables, or updated configurations. Always use this latest context when answering questions or making decisions."
         )
+
         message_list = (
             [system_message]
             + [context_emphasis]
             + [SystemMessage(str(resource_context))]
             + messages
         )
-
-        # print(message_list)
 
         # Get model response
         response = await model_with_tools.ainvoke(message_list)

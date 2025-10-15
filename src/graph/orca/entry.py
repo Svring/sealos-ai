@@ -17,6 +17,7 @@ async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
         "manage_project_agent",
         "manage_resource_agent",
         "deploy_project_agent",
+        "suggestion_agent",
         "append_node",
         "__end__",
     ]
@@ -43,6 +44,8 @@ async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
         return Command(goto="manage_resource_agent")
     elif stage == "deploy_project":
         return Command(goto="deploy_project_agent")
+    elif stage == "suggestion":
+        return Command(goto="suggestion_agent")
     elif stage == "append":
         return Command(goto="append_node")
     else:
@@ -51,7 +54,7 @@ async def entry_node(state: OrcaState, config: RunnableConfig) -> Command[
             goto="__end__",
             update={
                 "messages": AIMessage(
-                    content="Invalid stage. Please set stage to 'propose_project', 'manage_project', 'manage_resource', 'deploy_project', or 'append'."
+                    content="Invalid stage. Please set stage to 'propose_project', 'manage_project', 'manage_resource', 'deploy_project', 'suggestion', or 'append'."
                 )
             },
         )

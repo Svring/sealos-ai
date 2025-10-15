@@ -6,7 +6,6 @@ Handles project deployment operations with tools and actions.
 import os
 from typing import Literal
 from langchain_core.messages import SystemMessage
-from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 from dotenv import load_dotenv
 
@@ -24,7 +23,7 @@ load_dotenv()
 
 
 async def deploy_project_agent(
-    state: OrcaState, config: RunnableConfig
+    state: OrcaState,
 ) -> Command[Literal["deploy_project_tool_node", "__end__"]]:
     """
     Project deployment agent based on the Sealos AI functionality.
@@ -75,7 +74,7 @@ async def deploy_project_agent(
             message_list.extend(messages)
 
         # Get model response
-        response = await model_with_tools.ainvoke(message_list, config)
+        response = await model_with_tools.ainvoke(message_list)
 
         # Check if the response contains tool calls
         if hasattr(response, "tool_calls") and response.tool_calls:

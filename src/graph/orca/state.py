@@ -368,6 +368,18 @@ class ProjectProposal(BaseModel):
         return v
 
 
+class SuggestionOutput(BaseModel):
+    """
+    Structured output for suggestion agent.
+
+    Contains a list of suggestions as simple strings.
+    """
+
+    suggestions: List[str] = Field(
+        ..., description="List of suggestions as simple strings"
+    )
+
+
 class OrcaState(TypedDict):
     """
     Orca State
@@ -399,6 +411,7 @@ class OrcaState(TypedDict):
             "manage_project",
             "manage_resource",
             "deploy_project",
+            "suggestion",
             "append",
         ]
     ] = Field(default=None, description="Current stage of the Orca workflow")

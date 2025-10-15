@@ -2,20 +2,21 @@
 Graph assembly for the Orca agent.
 """
 
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode
 
 from src.graph.orca.state import OrcaState
 from src.graph.orca.entry import entry_node
-from src.graph.orca.manage_project_agent import (
+from src.graph.orca.nodes.manage_project_agent import (
     manage_project_agent,
     tools as manage_tools,
 )
-from src.graph.orca.manage_resource_agent import (
+from src.graph.orca.nodes.manage_resource_agent import (
     manage_resource_agent,
     tools as manage_resource_tools,
 )
-from src.graph.orca.deploy_project_agent import deploy_project_agent
+from src.graph.orca.nodes.deploy_project_agent import deploy_project_agent
+from src.graph.orca.nodes.suggestion_agent import suggestion_agent
 from src.graph.orca.tools.deploy_project_tool import deploy_project_tools
 from src.graph.orca.append import append_node
 
@@ -29,6 +30,7 @@ def build_graph():
     workflow.add_node("manage_project_agent", manage_project_agent)
     workflow.add_node("manage_resource_agent", manage_resource_agent)
     workflow.add_node("deploy_project_agent", deploy_project_agent)
+    workflow.add_node("suggestion_agent", suggestion_agent)
     workflow.add_node("append_node", append_node)
 
     workflow.add_node("manage_project_tool_node", ToolNode(tools=manage_tools))
