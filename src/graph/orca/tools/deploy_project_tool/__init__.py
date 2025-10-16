@@ -13,6 +13,7 @@ from .propose_devenv_deployment import (
     DeployDevBox,
     DeployDatabase,
 )
+from ..common_tool.suggestion_tool import suggestion_tool
 
 # Export all tools for easy importing
 deploy_project_tools = [
@@ -22,6 +23,7 @@ deploy_project_tools = [
     propose_template_deployment,
     propose_image_deployment,
     propose_devenv_deployment,
+    suggestion_tool,
 ]
 
 __all__ = [
@@ -33,5 +35,6 @@ __all__ = [
     "propose_devenv_deployment",
     "DeployDevBox",
     "DeployDatabase",
+    "suggestion_tool",
     "deploy_project_tools",
 ]

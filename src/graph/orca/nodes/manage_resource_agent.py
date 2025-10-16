@@ -119,6 +119,7 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.pause_launchpad_tool im
 from src.graph.orca.tools.manage_resource_tool.launchpad.restart_launchpad_tool import (
     restart_launchpad_tool,
 )
+from src.graph.orca.tools.common_tool.suggestion_tool import suggestion_tool
 
 
 # Tool sets for different resource types
@@ -169,6 +170,7 @@ tools = [
     *DEVBOX_TOOLS,
     *CLUSTER_TOOLS,
     *LAUNCHPAD_TOOLS,
+    suggestion_tool,
 ]
 
 
@@ -184,7 +186,7 @@ def get_tools_for_resource_type(resource_context: Any) -> List[Any]:
     """
     if not resource_context:
         # If no resource context, return all tools as fallback
-        return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS
+        return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS + [suggestion_tool]
 
     # Try to parse resource_context if it's a string
     if isinstance(resource_context, str):
@@ -192,7 +194,7 @@ def get_tools_for_resource_type(resource_context: Any) -> List[Any]:
             resource_context = json.loads(resource_context)
         except (json.JSONDecodeError, TypeError):
             # If parsing fails, return all tools as fallback
-            return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS
+            return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS + [suggestion_tool]
 
     # Extract resourceType from the context
     resource_type = None
@@ -206,15 +208,15 @@ def get_tools_for_resource_type(resource_context: Any) -> List[Any]:
         resource_type_lower = resource_type.lower()
 
         if resource_type_lower == "devbox":
-            return DEVBOX_TOOLS
+            return DEVBOX_TOOLS + [suggestion_tool]
         elif resource_type_lower == "cluster":
-            return CLUSTER_TOOLS
+            return CLUSTER_TOOLS + [suggestion_tool]
         elif resource_type_lower in ["deployment", "statefulset"]:
             # deployment and statefulset use launchpad tools
-            return LAUNCHPAD_TOOLS
+            return LAUNCHPAD_TOOLS + [suggestion_tool]
 
     # If resource type is not recognized, return all tools as fallback
-    return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS
+    return DEVBOX_TOOLS + CLUSTER_TOOLS + LAUNCHPAD_TOOLS + [suggestion_tool]
 
 
 async def manage_resource_agent(

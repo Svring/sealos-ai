@@ -40,6 +40,7 @@ from src.graph.orca.tools.manage_resource_tool.launchpad.delete_launchpad_tool i
 from src.graph.orca.tools.manage_resource_tool.cluster.delete_cluster_tool import (
     delete_cluster_tool,
 )
+from src.graph.orca.tools.common_tool.suggestion_tool import suggestion_tool
 
 # Create and delete tools for project management
 CREATE_DELETE_TOOLS = [
@@ -51,7 +52,7 @@ CREATE_DELETE_TOOLS = [
     delete_launchpad_tool,
 ]
 
-tools = CREATE_DELETE_TOOLS
+tools = CREATE_DELETE_TOOLS + [suggestion_tool]
 
 
 async def manage_project_agent(
