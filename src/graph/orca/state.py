@@ -403,6 +403,10 @@ class OrcaState(TypedDict):
         default=None, description="Kubeconfig for Kubernetes operations"
     )
 
+    trial: Optional[bool] = Field(
+        default=False, description="Whether to use the trial version of the model"
+    )
+
     messages: Annotated[list[AnyMessage], add_messages]
 
     stage: Optional[

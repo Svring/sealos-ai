@@ -36,6 +36,7 @@ async def deploy_project_agent(
             base_url,
             api_key,
             model_name,
+            trial,
         ) = get_state_values(
             state,
             {
@@ -43,12 +44,21 @@ async def deploy_project_agent(
                 "base_url": None,
                 "api_key": None,
                 "model_name": None,
+                "trial": False,
             },
         )
 
-        model = get_sealos_model(
-            base_url=base_url, api_key=api_key, model_name=model_name
-        )
+        # Use TRIAL_API_KEY if trial is true, otherwise use the provided api_key
+        effective_api_key = os.getenv("TRIAL_API_KEY") if trial else api_key
+
+        if trial:
+            # If trial, only pass the api_key
+            model = get_sealos_model(api_key=effective_api_key)
+        else:
+            # If not trial, pass all parameters
+            model = get_sealos_model(
+                base_url=base_url, api_key=effective_api_key, model_name=model_name
+            )
 
         # Filter tools based on OVERSEA environment variable
         # If OVERSEA=true, include search_docker_hub; otherwise, exclude it
