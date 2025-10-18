@@ -24,6 +24,11 @@ async def propose_image_deployment(
     append something like "my-project-abc123" or "my-project-xyz789" to make it unique.
     This applies to project names and application names.
 
+    CRITICAL DEPLOYMENT BEHAVIOR: After using this tool to propose an image deployment,
+    DO NOT suggest adding additional resources (databases, devboxes, etc.) as image
+    deployments are fixed configurations that cannot be expanded. Only suggest
+    deployment-related refinements if needed.
+
     Args:
         image_name (str): Docker image name (e.g., nginx:latest, node:18-alpine)
         project_name (str): Name of the project for this image deployment (add random characters to avoid collisions)

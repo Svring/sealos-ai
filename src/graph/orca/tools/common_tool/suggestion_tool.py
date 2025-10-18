@@ -61,6 +61,9 @@ def suggestion_tool(
     - "Would you like to deploy the proposed configuration?" (avoid deployment questions) ❌
     - "configure environment variables" (belongs to manage_resource mode, not deployment) ❌
     - "modify resource allocation" (belongs to manage_resource mode, not deployment) ❌
+    - "add a redis database" (NEVER suggest after propose_template_deployment or propose_image_deployment) ❌
+    - "add a postgresql database" (NEVER suggest after propose_template_deployment or propose_image_deployment) ❌
+    - "deploy another devbox" (NEVER suggest after propose_template_deployment or propose_image_deployment) ❌
 
     COMMON CASES WHERE SUGGESTIONS ARE NEEDED:
     - After analyzing monitoring data and finding performance issues (e.g., high CPU/memory usage)

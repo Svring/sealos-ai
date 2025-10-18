@@ -20,6 +20,11 @@ async def propose_template_deployment(
     projects. For example, if you want to create a project called "my-project",
     append something like "my-project-abc123" or "my-project-xyz789" to make it unique.
 
+    CRITICAL DEPLOYMENT BEHAVIOR: After using this tool to propose a template deployment,
+    DO NOT suggest adding additional resources (databases, devboxes, etc.) as template
+    deployments are fixed configurations that cannot be expanded. Only suggest
+    deployment-related refinements if needed.
+
     Args:
         template_name (str): Name of the template to deploy from the App Store
         project_name (str): Name of the project for this template deployment (add random characters to avoid collisions)
