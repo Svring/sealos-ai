@@ -26,8 +26,8 @@ class ClusterUpdateData(BaseModel):
     name: str = Field(..., description="Cluster name")
     # Add fields based on clusterUpdateFormSchema from the Next.js code
     # This is a placeholder - you may need to adjust based on actual schema
-    cpu: Optional[int] = Field(None, description="CPU allocation")
-    memory: Optional[int] = Field(None, description="Memory allocation")
+    cpu: Optional[float] = Field(None, description="CPU allocation")
+    memory: Optional[float] = Field(None, description="Memory allocation")
     replicas: Optional[int] = Field(None, description="Number of replicas")
     storage: Optional[int] = Field(None, description="Storage allocation in GB")
     # Add other fields as needed based on the actual clusterUpdateFormSchema

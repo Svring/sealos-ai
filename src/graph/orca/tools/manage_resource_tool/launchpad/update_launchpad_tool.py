@@ -3,7 +3,7 @@ Update launchpad tool for the manage resource agent.
 Handles launchpad configuration updates with state management.
 """
 
-from typing import Optional, Dict, Any, Literal
+from typing import Optional, Dict, Any, Literal, Union
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
@@ -33,8 +33,10 @@ from src.lib.brain.sealos.launchpad.get import (
 async def update_launchpad_tool(
     launchpad_name: str,
     state: Annotated[dict, InjectedState],
-    cpu: Optional[Literal[1, 2, 4, 8, 16]] = None,
-    memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = None,
+    cpu: Optional[Union[Literal["0.5", "1", "2", "4", "8", "16"], float, int]] = None,
+    memory: Optional[
+        Union[Literal["0.5", "1", "2", "4", "8", "16", "32"], float, int]
+    ] = None,
     # replicas: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
@@ -61,8 +63,8 @@ async def update_launchpad_tool(
 
     Args:
         launchpad_name: Name of the app launchpad to update
-        cpu: CPU allocation in cores (1, 2, 4, 8, or 16) - REQUIRED
-        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32) - REQUIRED
+        cpu: CPU allocation in cores (0.5, 1, 2, 4, 8, or 16) - REQUIRED
+        memory: Memory allocation in GB (0.5, 1, 2, 4, 8, 16, or 32) - REQUIRED
         # replicas: Number of replicas (1-20)
 
     Returns:
@@ -102,6 +104,12 @@ async def update_launchpad_tool(
     cpu = edited_data.get("cpu", cpu)
     memory = edited_data.get("memory", memory)
 
+    # Convert string values to numbers
+    if cpu is not None:
+        cpu = float(cpu) if isinstance(cpu, str) else cpu
+    if memory is not None:
+        memory = float(memory) if isinstance(memory, str) else memory
+
     context = extract_sealos_context(state, LaunchpadContext)
 
     # Convert to brain context
@@ -118,8 +126,8 @@ async def update_launchpad_tool(
     # Create update data
     update_data = LaunchpadUpdateData(
         name=launchpad_name,
-        cpu=cpu,
-        memory=memory,
+        cpu=float(cpu) if cpu is not None else None,
+        memory=float(memory) if memory is not None else None,
     )
 
     try:

@@ -26,8 +26,8 @@ class LaunchpadUpdateData(BaseModel):
     name: str = Field(..., description="Launchpad name")
     # Add fields based on launchpadUpdateFormSchema from the Next.js code
     # This is a placeholder - you may need to adjust based on actual schema
-    cpu: Optional[int] = Field(None, description="CPU allocation")
-    memory: Optional[int] = Field(None, description="Memory allocation")
+    cpu: Optional[float] = Field(None, description="CPU allocation")
+    memory: Optional[float] = Field(None, description="Memory allocation")
     createPorts: Optional[List[int]] = Field(
         None, description="Array of port numbers to create"
     )

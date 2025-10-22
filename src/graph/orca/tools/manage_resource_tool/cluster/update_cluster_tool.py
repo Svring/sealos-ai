@@ -3,7 +3,7 @@ Update cluster tool for the manage resource agent.
 Handles cluster configuration updates with state management.
 """
 
-from typing import Optional, Dict, Any, Literal
+from typing import Optional, Dict, Any, Literal, Union
 from typing_extensions import Annotated
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedState
@@ -32,8 +32,10 @@ from src.lib.brain.sealos.cluster.get import (
 async def update_cluster_tool(
     cluster_name: str,
     state: Annotated[dict, InjectedState],
-    cpu: Optional[Literal[1, 2, 4, 8]] = None,
-    memory: Optional[Literal[1, 2, 4, 8, 16, 32]] = None,
+    cpu: Optional[Union[Literal["0.5", "1", "2", "4", "8"], float, int]] = None,
+    memory: Optional[
+        Union[Literal["0.5", "1", "2", "4", "8", "16", "32"], float, int]
+    ] = None,
     replicas: Optional[int] = None,
     storage: Optional[int] = None,
 ) -> Dict[str, Any]:
@@ -61,8 +63,8 @@ async def update_cluster_tool(
 
     Args:
         cluster_name: Name of the database to update
-        cpu: CPU allocation in cores (1, 2, 4, or 8) - REQUIRED
-        memory: Memory allocation in GB (1, 2, 4, 8, 16, or 32) - REQUIRED
+        cpu: CPU allocation in cores (0.5, 1, 2, 4, or 8) - REQUIRED
+        memory: Memory allocation in GB (0.5, 1, 2, 4, 8, 16, or 32) - REQUIRED
         replicas: Number of replicas (1-20) - REQUIRED
         storage: Storage allocation in GB (3-300) - REQUIRED. Note: Storage cannot be set to a shorter value than the current storage
 
@@ -109,6 +111,12 @@ async def update_cluster_tool(
     replicas = edited_data.get("replicas", replicas)
     storage = edited_data.get("storage", storage)
 
+    # Convert string values to numbers
+    if cpu is not None:
+        cpu = float(cpu) if isinstance(cpu, str) else cpu
+    if memory is not None:
+        memory = float(memory) if isinstance(memory, str) else memory
+
     context = extract_sealos_context(state, ClusterContext)
 
     # Convert to brain context
@@ -125,8 +133,8 @@ async def update_cluster_tool(
     # Create update data
     update_data = ClusterUpdateData(
         name=cluster_name,
-        cpu=cpu,
-        memory=memory,
+        cpu=float(cpu) if cpu is not None else None,
+        memory=float(memory) if memory is not None else None,
         replicas=replicas,
         storage=storage,
     )
