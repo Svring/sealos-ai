@@ -29,16 +29,17 @@ def suggestion_tool(
     1. ACTIVELY CALL THIS TOOL when you identify opportunities to provide helpful suggestions
     2. Only provide 1-2 suggestions maximum
     3. Base suggestions on the current conversation context, especially what you just explained or offered
-    4. Suggestions must be DIRECT COMMANDS with CONCRETE VALUES - not vague descriptions or recommendations
-    5. Suggestions will be used as subsequent messages sent on the user's behalf, so they must be:
+    4. **CRITICAL LANGUAGE CONSISTENCY**: Suggestions MUST match the user's current message language exactly. If the user communicates in English, provide suggestions ONLY in English. If the user communicates in Chinese, provide suggestions ONLY in Chinese. **NEVER provide Chinese suggestions following English responses or vice versa.** The suggestions language must match the response language without exception.
+    5. Suggestions must be DIRECT COMMANDS with CONCRETE VALUES - not vague descriptions or recommendations
+    6. Suggestions will be used as subsequent messages sent on the user's behalf, so they must be:
        - Direct commands that can be executed immediately
        - Include specific values and parameters
        - Concise but complete (less than 15 words)
        - Ready to send as-is without modification
-    6. ACTIVELY USE THIS TOOL proactively when user requests are unclear - offer creative but concrete suggestions instead of asking for clarification
-    7. If the current context doesn't warrant suggestions, don't call this tool
-    8. NEVER finish responses without calling a tool or providing suggestions (except when you have just completed a user request like 'start devbox', 'create database', etc.)
-    9. When unsure what the user wants to do next, ACTIVELY CALL THIS TOOL to guess the best next step rather than ending the response or asking questions
+    7. ACTIVELY USE THIS TOOL proactively when user requests are unclear - offer creative but concrete suggestions instead of asking for clarification
+    8. If the current context doesn't warrant suggestions, don't call this tool
+    9. NEVER finish responses without calling a tool or providing suggestions (except when you have just completed a user request like 'start devbox', 'create database', etc.)
+    10. When unsure what the user wants to do next, ACTIVELY CALL THIS TOOL to guess the best next step rather than ending the response or asking questions
 
     EXAMPLES OF GOOD SUGGESTIONS (direct commands with concrete values):
     - "update to 2c 4g" (not "update DevBox resource if needed")
