@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "docker>=7.1.0",
     "dotenv>=0.9.9",
+    "fastapi>=0.121.0",
     "kubernetes>=33.1.0",
     "langchain-mcp-adapters>=0.1.8",
     "langchain-tavily>=0.2.11",
@@ -18,7 +19,9 @@ dependencies = [
     "pyhumps>=3.8.0",
     "requests>=2.32.5",
     "scikit-learn>=1.7.2",
+    "starlette>=0.48.0",
     "tiktoken>=0.11.0",
+    "uvicorn>=0.37.0",
 ]
 
 [dependency-groups]

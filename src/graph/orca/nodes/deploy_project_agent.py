@@ -16,7 +16,6 @@ from src.graph.orca.state import OrcaState
 from src.graph.orca.prompts.deploy_project_prompt import DEPLOY_PROJECT_PROMPT
 from src.graph.orca.tools.deploy_project_tool import (
     deploy_project_tools,
-    search_docker_hub,
 )
 
 load_dotenv()
@@ -48,30 +47,25 @@ async def deploy_project_agent(
             },
         )
 
-        # Use TRIAL_API_KEY if trial is true, otherwise use the provided api_key
-        effective_api_key = os.getenv("TRIAL_API_KEY") if trial else api_key
-
+        # Use TRIAL_API_KEY and TRIAL_BASE_URL if trial is true, otherwise use the provided values
         if trial:
-            # If trial, only pass the api_key
-            model = get_sealos_model(api_key=effective_api_key)
+            effective_api_key = os.getenv("TRIAL_API_KEY")
+            effective_base_url = os.getenv("TRIAL_BASE_URL")
+            # If trial, use TRIAL_BASE_URL and TRIAL_API_KEY
+            model = get_sealos_model(
+                base_url=effective_base_url, api_key=effective_api_key
+            )
         else:
+            effective_api_key = api_key
+            effective_base_url = base_url
             # If not trial, pass all parameters
             model = get_sealos_model(
-                base_url=base_url, api_key=effective_api_key, model_name=model_name
+                base_url=effective_base_url,
+                api_key=effective_api_key,
+                model_name=model_name,
             )
 
-        # Filter tools based on OVERSEA environment variable
-        # If OVERSEA=true, include search_docker_hub; otherwise, exclude it
-        available_tools = deploy_project_tools.copy()
-        oversea_enabled = os.getenv("OVERSEA", "").lower() == "true"
-
-        if not oversea_enabled:
-            # Remove search_docker_hub from available tools
-            available_tools = [
-                tool for tool in available_tools if tool != search_docker_hub
-            ]
-
-        model_with_tools = model.bind_tools(available_tools)
+        model_with_tools = model.bind_tools(deploy_project_tools)
 
         # Build system message for project deployment
         system_message = SystemMessage(content=DEPLOY_PROJECT_PROMPT)
