@@ -11,6 +11,48 @@ from src.utils.brain.compose_api_url import compose_api_url
 
 load_dotenv()
 
+# Shared runtime options - must match create_devbox_tool.py
+DevboxRuntime = Literal[
+    "quarkus",
+    "hugo",
+    "debian-ssh",
+    "vue",
+    "rust",
+    "claude-code",
+    "nuxt3",
+    "gin",
+    "mcp",
+    "django",
+    "ubuntu",
+    "docusaurus",
+    "vert.x",
+    "go",
+    "svelte",
+    "python",
+    "echo",
+    "chi",
+    "java",
+    "react",
+    "umi",
+    "net",
+    "iris",
+    "c",
+    "next.js",
+    "node.js",
+    "spring-boot",
+    "express.js",
+    "flask",
+    "cpp",
+    "nginx",
+    "astro",
+    "php",
+    "hexo",
+    "angular",
+    "vitepress",
+    "rocket",
+    "sealaf",  # Keep for backward compatibility
+]
+
 
 class BrainDevboxContext(BaseModel):
     """Context information for brain devbox operations."""
@@ -31,41 +73,7 @@ class DevboxCreateData(BaseModel):
         description="Devbox name (must be DNS compliant: lowercase, numbers, hyphens, 1-63 chars)",
     )
 
-    runtime: Literal[
-        "nuxt3",
-        "angular",
-        "quarkus",
-        "ubuntu",
-        "flask",
-        "java",
-        "chi",
-        "net",
-        "iris",
-        "hexo",
-        "python",
-        "docusaurus",
-        "vitepress",
-        "cpp",
-        "vue",
-        "nginx",
-        "rocket",
-        "debian-ssh",
-        "vert.x",
-        "express.js",
-        "django",
-        "next.js",
-        "sealaf",
-        "go",
-        "react",
-        "php",
-        "svelte",
-        "c",
-        "astro",
-        "umi",
-        "gin",
-        "echo",
-        "rust",
-    ] = Field(..., description="Runtime environment name")
+    runtime: DevboxRuntime = Field(..., description="Runtime environment name")
 
     cpu: Optional[int] = Field(2, description="CPU allocation in cores")
     memory: Optional[int] = Field(4, description="Memory allocation in GB")

@@ -5,8 +5,5 @@
   "graphs": {
     "orca": "./src/graph/orca/graph.py:graph"
   },
-  "http": {
-    "app": "./src/api/app.py:app"
-  },
   "env": ".env"
 }

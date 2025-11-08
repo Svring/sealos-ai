@@ -8,6 +8,8 @@ from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field, field_validator
 import re
 
+from src.lib.brain.sealos.devbox.create import DevboxRuntime
+
 
 class DeployDevBox(BaseModel):
     """Simplified DevBox configuration for deployment."""
@@ -17,45 +19,8 @@ class DeployDevBox(BaseModel):
         max_length=30,
         description="DevBox name (max 30 chars, lowercase letters, numbers, hyphens only). Examples: 'dev-env', 'frontend_dev', 'api-dev'",
     )
-    runtime: Literal[
-        "nuxt3",
-        "angular",
-        "quarkus",
-        "ubuntu",
-        "flask",
-        "java",
-        "chi",
-        "net",
-        "iris",
-        "hexo",
-        "python",
-        "docusaurus",
-        "vitepress",
-        "cpp",
-        "vue",
-        "nginx",
-        "rocket",
-        "debian-ssh",
-        "vert.x",
-        "express.js",
-        "django",
-        "next.js",
-        "go",
-        "react",
-        "php",
-        "svelte",
-        "c",
-        "astro",
-        "umi",
-        "gin",
-        "echo",
-        "rust",
-        "mcp",
-        "hugo",
-        "spring-boot",
-        "node.js",
-    ] = Field(
-        description="The runtime environment for development (e.g., 'Next.js', 'Python', 'React')"
+    runtime: DevboxRuntime = Field(
+        description="The runtime environment for development (e.g., 'Next.js', 'Python', 'React', 'claude-code'). Note: 'claude-code' can be deployed as a devbox for development environment."
     )
     ports: Optional[List[int]] = Field(
         default=None,
@@ -124,9 +89,15 @@ async def propose_devenv_deployment(
     append something like "my-project-abc123" or "my-project-xyz789" to make it unique.
     This applies to project names, DevBox names, and Database names.
 
+    Supported DevBox runtimes (all deployable as devbox for development environment):
+    - angular, astro, c, chi, claude-code, cpp, debian-ssh, django, docusaurus, echo,
+      express.js, flask, gin, go, hexo, hugo, iris, java, mcp, net, next.js, nginx,
+      node.js, nuxt3, php, python, quarkus, react, rocket, rust, sealaf, spring-boot,
+      svelte, ubuntu, umi, vert.x, vitepress, vue
+
     Args:
         project_name (str): Name of the project for this development environment deployment (add random characters to avoid collisions).
-        devbox (Optional[List[DeployDevBox]]): List of DevBox configurations for development environments. Can deploy multiple DevBox instances.
+        devbox (Optional[List[DeployDevBox]]): List of DevBox configurations for development environments. Can deploy multiple DevBox instances. Runtime must be one of the supported runtimes listed above.
         database (Optional[List[DeployDatabase]]): List of database configurations for the development environment. Can deploy multiple databases.
 
     Returns:
