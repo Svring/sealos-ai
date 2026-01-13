@@ -33,6 +33,7 @@ async def create_cluster_tool(
         "redis",
         "kafka",
         "milvus",
+        "clickhouse",
     ],
     cpu: float = 0.5,
     memory: float = 0.5,
