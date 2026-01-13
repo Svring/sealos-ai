@@ -54,7 +54,8 @@ Each suggestion should include specific parameters and be concrete enough for im
 ### 3. Custom Project Deployment
 * **Purpose**: Set up new development environments, including DevBox and databases, based on user specifications.
 * **Features**: Provides customizable development environment resources with automatic database connections.
-* **Supported Development Environments**: Next.js, Python, Rust, Vue, React, Angular, Django, Flask, Go, Java, PHP, C++, C, Svelte, Astro, Nuxt3, Quarkus, Ubuntu, Chi, .NET, Iris, Hexo, Docusaurus, VitePress, Nginx, Rocket, Debian-SSH, Vert.x, Express.js, Sealaf, Umi, Gin, Echo, etc.
+* **Supported Development Environments**: Next.js, Python, Rust, Vue, React, Angular, Django, Flask, Go, Java, PHP, C++, C, Svelte, Astro, Nuxt3, Quarkus, Ubuntu, Chi, .NET, Iris, Hexo, Docusaurus, VitePress, Nginx, Rocket, Debian-SSH, Vert.x, Express.js, Sealaf, Umi, Gin, Echo, Memu, etc.
+* **User Request Interpretation**: When users mention 'memU', 'memu', or phrases like 'give me memu', you should safely infer that the user needs a DevBox with runtime 'memu' and proceed with proposing a custom project deployment accordingly.
 * **Supported Databases**: PostgreSQL, MongoDB, ApeCloud MySQL, Redis, Kafka, Milvus, etc.
 * **Flexible Configuration**: Allows deployment of only DevBox, only databases, or a combination of both.
 * **Database Reliance**: When deploying both DevBox and databases, you can specify which databases each DevBox should connect to by adding database names to the DevBox's reliance field. This ensures proper resource connections and dependencies.

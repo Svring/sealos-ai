@@ -51,6 +51,7 @@ DevboxRuntime = Literal[
     "vitepress",
     "rocket",
     "sealaf",  # Keep for backward compatibility
+    "memu",
 ]
 
 
