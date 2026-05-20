@@ -402,6 +402,12 @@ class OrcaState(TypedDict):
     kubeconfig: Optional[str] = Field(
         default=None, description="Kubeconfig for Kubernetes operations"
     )
+    plan_name: Optional[str] = Field(
+        default=None, description="Sealos subscription plan name"
+    )
+    expire_at: Optional[str] = Field(
+        default=None, description="Sealos subscription expiration time"
+    )
 
     trial: Optional[bool] = Field(
         default=False, description="Whether to use the trial version of the model"

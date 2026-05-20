@@ -65,6 +65,17 @@ def _deny_response(reason: str) -> JSONResponse:
             },
             status_code=402,
         )
+    if reason == "subscription_ineligible":
+        return JSONResponse(
+            {
+                "error": (
+                    "Free chat quota is only available for an active Sealos Free "
+                    "subscription (plan_name=Free with a valid expire_at)."
+                ),
+                "code": "FREE_QUOTA_SUBSCRIPTION_INELIGIBLE",
+            },
+            status_code=403,
+        )
     if reason == "no_platform_creds":
         return JSONResponse(
             {
@@ -142,6 +153,8 @@ class FreeQuotaStreamMiddleware(BaseHTTPMiddleware):
     - The quota key is derived from the kubeconfig only AFTER the kubeconfig
       has been verified by brain. A forged kubeconfig cannot consume someone
       else's quota.
+    - Platform free turns are granted only when graph input includes
+      ``plan_name=Free`` and a future ``expire_at`` (from Sealos session).
     - When the entitlements DB is unreachable or unconfigured, the middleware
       fails CLOSED (503) instead of letting requests through as unlimited.
     - A free turn is reserved BEFORE the upstream stream starts and is
@@ -195,6 +208,8 @@ class FreeQuotaStreamMiddleware(BaseHTTPMiddleware):
                     user_base_url=graph_input.get("base_url"),
                     user_api_key=graph_input.get("api_key"),
                     model_name=graph_input.get("model_name"),
+                    plan_name=graph_input.get("plan_name"),
+                    expire_at=graph_input.get("expire_at"),
                 ),
             )
         except QuotaUnavailableError as exc:

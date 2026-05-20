@@ -14,6 +14,10 @@ from src.lib.quota.resolve_credentials import (
     acquire_billing_credentials,
     resolve_platform_openai_credentials,
 )
+from src.lib.quota.subscription_eligibility import (
+    is_free_subscription_eligible,
+    parse_subscription_expiry,
+)
 
 __all__ = [
     "BillingCredentials",
@@ -28,4 +32,6 @@ __all__ = [
     "reserve_free_turn",
     "resolve_entitlement_key",
     "resolve_platform_openai_credentials",
+    "is_free_subscription_eligible",
+    "parse_subscription_expiry",
 ]

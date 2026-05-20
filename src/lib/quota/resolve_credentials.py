@@ -11,9 +11,15 @@ from src.lib.quota.free_tier import (
     refund_free_turn,
     reserve_free_turn,
 )
+from src.lib.quota.subscription_eligibility import is_free_subscription_eligible
 
 BillingMode = Literal["free", "user"]
-DenyReason = Literal["exhausted", "no_platform_creds", "no_credentials"]
+DenyReason = Literal[
+    "exhausted",
+    "no_platform_creds",
+    "no_credentials",
+    "subscription_ineligible",
+]
 
 
 @dataclass(frozen=True)
@@ -57,30 +63,31 @@ def acquire_billing_credentials(
     user_base_url: str | None,
     user_api_key: str | None,
     model_name: str | None,
+    plan_name: str | None = None,
+    expire_at: str | None = None,
 ) -> tuple[BillingCredentials | None, DenyReason | Literal["ok"]]:
     """Acquire billing credentials for a single LangGraph streaming run.
 
-    Behaviour, ignoring trial logic:
+    Behaviour:
 
-    1. If platform creds are configured, atomically ``reserve_free_turn``.
-       On success, return ``"free"`` credentials with the post-reserve snapshot.
-       On exhaustion, fall through.
+    1. If platform creds are configured **and** ``plan_name`` is ``Free`` with a
+       valid ``expire_at``, atomically ``reserve_free_turn``. On success, return
+       ``"free"`` credentials. On exhaustion, fall through to user creds.
     2. If user-provided credentials are present, return ``"user"`` credentials.
-       The free turn (if reserved at all) is left consumed only when the
-       caller picks "free"; this branch never touches the entitlements row.
-    3. Otherwise return ``(None, reason)`` so the middleware can produce a
-       precise HTTP status:
-       - ``"exhausted"``  → quota empty AND user has no fallback creds → 402
-       - ``"no_platform_creds"`` → platform unconfigured AND user has no
-         fallback creds → 503
+    3. Otherwise return ``(None, reason)``:
+       - ``"subscription_ineligible"`` → not on Free / subscription expired
+       - ``"exhausted"`` → eligible Free tier but quota used up, no user creds
+       - ``"no_platform_creds"`` → platform unconfigured AND no user creds
 
     Raises:
         QuotaUnavailableError: propagated from the quota subsystem. The
             caller MUST translate this to a 503 (fail-closed).
     """
     platform = resolve_platform_openai_credentials()
+    snapshot: FreeTierSnapshot | None = None
+    free_eligible = is_free_subscription_eligible(plan_name, expire_at)
 
-    if platform is not None:
+    if platform is not None and free_eligible:
         try:
             snapshot = reserve_free_turn(entitlement_key)
         except FreeTierExhaustedError:
@@ -119,6 +126,8 @@ def acquire_billing_credentials(
 
     if platform is None:
         return None, "no_platform_creds"
+    if not free_eligible:
+        return None, "subscription_ineligible"
     return None, "exhausted"
 
 
