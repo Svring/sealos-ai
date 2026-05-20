@@ -235,6 +235,7 @@ async def manage_resource_agent(
             api_key,
             model_name,
             resource_context,
+            trial,
         ) = get_state_values(
             state,
             {
@@ -243,11 +244,15 @@ async def manage_resource_agent(
                 "api_key": None,
                 "model_name": None,
                 "resource_context": None,
+                "trial": False,
             },
         )
 
         model = get_sealos_model(
-            base_url=base_url, api_key=api_key, model_name=model_name
+            base_url=base_url,
+            api_key=api_key,
+            model_name=model_name,
+            trial=bool(trial),
         )
 
         # Dynamically select tools based on resource type

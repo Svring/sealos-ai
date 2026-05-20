@@ -1,20 +1,31 @@
 import asyncio
 import json
+import logging
 import os
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 import requests
-from fastapi import Request
-from fastapi.responses import JSONResponse, StreamingResponse
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 
 from src.lib.quota.free_tier import QuotaUnavailableError, refund_free_turn
 from src.lib.quota.identity import resolve_entitlement_key
+from src.lib.quota.quota_logging import (
+    ensure_quota_logging_configured,
+    log_quota_event,
+    log_request_context,
+    log_request_status,
+    mask_secret,
+    new_request_id,
+)
 from src.lib.quota.resolve_credentials import (
     BillingCredentials,
     acquire_billing_credentials,
+    resolve_platform_openai_credentials,
 )
+
+ensure_quota_logging_configured()
+
+Send = Callable[[dict[str, Any]], Awaitable[None]]
+Receive = Callable[[], Awaitable[dict[str, Any]]]
 
 
 def _graph_input(payload: dict[str, Any]) -> dict[str, Any]:
@@ -56,17 +67,18 @@ def _quota_headers(credentials: BillingCredentials) -> dict[str, str]:
     }
 
 
-def _deny_response(reason: str) -> JSONResponse:
+def _deny_payload(reason: str) -> tuple[int, dict[str, Any]]:
     if reason == "exhausted":
-        return JSONResponse(
+        return (
+            402,
             {
                 "error": "Free chat quota exhausted. Configure billing credentials to continue.",
                 "code": "FREE_QUOTA_EXHAUSTED",
             },
-            status_code=402,
         )
     if reason == "subscription_ineligible":
-        return JSONResponse(
+        return (
+            403,
             {
                 "error": (
                     "Free chat quota is only available for an active Sealos Free "
@@ -74,24 +86,22 @@ def _deny_response(reason: str) -> JSONResponse:
                 ),
                 "code": "FREE_QUOTA_SUBSCRIPTION_INELIGIBLE",
             },
-            status_code=403,
         )
     if reason == "no_platform_creds":
-        return JSONResponse(
+        return (
+            503,
             {
                 "error": "Platform AI credentials are not configured and no user credentials were provided.",
                 "code": "FREE_QUOTA_UNCONFIGURED",
             },
-            status_code=503,
         )
-    return JSONResponse(
+    return (
+        503,
         {"error": "Free chat quota unavailable.", "code": "FREE_QUOTA_UNAVAILABLE"},
-        status_code=503,
     )
 
 
 def _chunk_indicates_error(chunk: bytes) -> bool:
-    """Heuristically detect a LangGraph SSE ``event: error`` frame."""
     try:
         text = chunk.decode("utf-8", errors="ignore")
     except Exception:
@@ -100,18 +110,48 @@ def _chunk_indicates_error(chunk: bytes) -> bool:
     return "event: error" in lowered or "event:error" in lowered
 
 
-async def _authenticate_kubeconfig(kubeconfig_encoded: str) -> JSONResponse | None:
-    """Verify the kubeconfig against brain's ``/api/auth``.
+def _header_value(scope: dict[str, Any], name: str) -> str | None:
+    target = name.lower().encode()
+    for key, value in scope.get("headers", []):
+        if key.lower() == target:
+            return value.decode("latin-1")
+    return None
 
-    Returns ``None`` on success, or a ``JSONResponse`` to short-circuit the
-    request with the appropriate status code on failure.
-    """
+
+async def _read_request_body(receive: Receive) -> bytes:
+    chunks: list[bytes] = []
+    while True:
+        message = await receive()
+        if message["type"] == "http.request":
+            chunks.append(message.get("body", b""))
+            if not message.get("more_body", False):
+                break
+        elif message["type"] == "http.disconnect":
+            break
+    return b"".join(chunks)
+
+
+async def _send_json(send: Send, status: int, payload: dict[str, Any]) -> None:
+    body = json.dumps(payload).encode("utf-8")
+    await send(
+        {
+            "type": "http.response.start",
+            "status": status,
+            "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode()),
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": body, "more_body": False})
+
+
+async def _authenticate_kubeconfig(
+    kubeconfig_encoded: str,
+) -> tuple[int, dict[str, Any]] | None:
     frontend_url = os.getenv("SEALOS_BRAIN_FRONTEND_URL", "").strip()
     if not frontend_url:
-        return JSONResponse(
-            {"error": "SEALOS_BRAIN_FRONTEND_URL not configured"},
-            status_code=500,
-        )
+        return 500, {"error": "SEALOS_BRAIN_FRONTEND_URL not configured"}
 
     auth_url = f"{frontend_url.rstrip('/')}/api/auth"
     headers = {
@@ -128,10 +168,7 @@ async def _authenticate_kubeconfig(kubeconfig_encoded: str) -> JSONResponse | No
             ),
         )
     except requests.RequestException as exc:
-        return JSONResponse(
-            {"error": f"Authentication service error: {exc}"},
-            status_code=503,
-        )
+        return 503, {"error": f"Authentication service error: {exc}"}
 
     if auth_response.status_code != 200:
         message = "Unauthorized"
@@ -139,163 +176,315 @@ async def _authenticate_kubeconfig(kubeconfig_encoded: str) -> JSONResponse | No
             message = auth_response.json().get("error", message)
         except Exception:
             pass
-        return JSONResponse({"error": message}, status_code=401)
+        return 401, {"error": message}
 
     return None
 
 
-class FreeQuotaStreamMiddleware(BaseHTTPMiddleware):
-    """Authenticate the kubeconfig and enforce per-namespace free turns on
-    LangGraph streaming runs (``POST .../runs/stream``).
+class FreeQuotaStreamMiddleware:
+    """Pure ASGI middleware — reliably rewrites the run/stream request body.
 
-    Important guarantees:
-
-    - The quota key is derived from the kubeconfig only AFTER the kubeconfig
-      has been verified by brain. A forged kubeconfig cannot consume someone
-      else's quota.
-    - Platform free turns are granted only when graph input includes
-      ``plan_name=Free`` and a future ``expire_at`` (from Sealos session).
-    - When the entitlements DB is unreachable or unconfigured, the middleware
-      fails CLOSED (503) instead of letting requests through as unlimited.
-    - A free turn is reserved BEFORE the upstream stream starts and is
-      refunded if the stream fails to start, returns a non-200, errors mid
-      stream, or the client disconnects.
+    ``BaseHTTPMiddleware`` does not propagate a replaced request body to the
+    inner app; LangGraph was still reading the client's original ``base_url`` /
+    ``api_key`` from thread checkpoint state / the untouched POST body.
     """
 
-    async def dispatch(self, request: Request, call_next):
-        if request.method != "POST" or not request.url.path.endswith("/runs/stream"):
-            return await call_next(request)
+    def __init__(self, app: Any):
+        self.app = app
 
-        kubeconfig_encoded = request.headers.get("authorization")
+    async def __call__(self, scope: dict[str, Any], receive: Receive, send: Send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        method = scope.get("method", "")
+        path = scope.get("path", "")
+        if method != "POST" or not path.endswith("/runs/stream"):
+            await self.app(scope, receive, send)
+            return
+
+        ensure_quota_logging_configured()
+        request_id = new_request_id()
+        loop = asyncio.get_running_loop()
+
+        kubeconfig_encoded = _header_value(scope, "authorization")
         if not kubeconfig_encoded:
-            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+            log_quota_event(
+                "request_rejected",
+                request_id=request_id,
+                reason="missing_authorization",
+            )
+            await _send_json(send, 401, {"error": "Unauthorized"})
+            return
 
         auth_error = await _authenticate_kubeconfig(kubeconfig_encoded)
         if auth_error is not None:
-            return auth_error
+            status, payload = auth_error
+            log_quota_event(
+                "request_rejected",
+                request_id=request_id,
+                reason="kubeconfig_auth_failed",
+                status_code=status,
+            )
+            await _send_json(send, status, payload)
+            return
 
-        body = await request.body()
+        body = await _read_request_body(receive)
         if not body:
-            return JSONResponse({"error": "Missing run payload"}, status_code=400)
+            log_quota_event(
+                "request_rejected", request_id=request_id, reason="missing_body"
+            )
+            await _send_json(send, 400, {"error": "Missing run payload"})
+            return
 
         try:
             payload = json.loads(body.decode("utf-8"))
         except json.JSONDecodeError:
-            return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+            log_quota_event(
+                "request_rejected", request_id=request_id, reason="invalid_json"
+            )
+            await _send_json(send, 400, {"error": "Invalid JSON body"})
+            return
 
         if not isinstance(payload, dict):
-            return JSONResponse({"error": "Invalid run payload"}, status_code=400)
+            log_quota_event(
+                "request_rejected",
+                request_id=request_id,
+                reason="invalid_payload_shape",
+            )
+            await _send_json(send, 400, {"error": "Invalid run payload"})
+            return
 
         graph_input = _graph_input(payload)
         session_id = _extract_session_id(payload, graph_input)
+        trial = bool(graph_input.get("trial"))
         entitlement_key = resolve_entitlement_key(
             kubeconfig_encoded=kubeconfig_encoded,
-            trial=bool(graph_input.get("trial")),
+            trial=trial,
             session_id=session_id,
         )
         if not entitlement_key:
-            return JSONResponse(
-                {"error": "Could not resolve quota identity from kubeconfig"},
-                status_code=400,
+            log_quota_event(
+                "request_rejected",
+                request_id=request_id,
+                reason="entitlement_key_unresolved",
+                trial=trial,
+                session_id=session_id,
             )
+            await _send_json(
+                send,
+                400,
+                {"error": "Could not resolve quota identity from kubeconfig"},
+            )
+            return
 
-        loop = asyncio.get_running_loop()
+        client_base_url = graph_input.get("base_url")
+        client_api_key = graph_input.get("api_key")
+
+        log_request_context(
+            request_id=request_id,
+            path=path,
+            entitlement_key=entitlement_key,
+            session_id=session_id,
+            trial=trial,
+            plan_name=graph_input.get("plan_name"),
+            expire_at=graph_input.get("expire_at"),
+            model_name=graph_input.get("model_name"),
+            user_base_url=client_base_url,
+            user_api_key=client_api_key,
+            platform_configured=resolve_platform_openai_credentials() is not None,
+        )
+
         try:
             credentials, reason = await loop.run_in_executor(
                 None,
                 lambda: acquire_billing_credentials(
                     entitlement_key=entitlement_key,
-                    user_base_url=graph_input.get("base_url"),
-                    user_api_key=graph_input.get("api_key"),
+                    user_base_url=client_base_url,
+                    user_api_key=client_api_key,
                     model_name=graph_input.get("model_name"),
                     plan_name=graph_input.get("plan_name"),
                     expire_at=graph_input.get("expire_at"),
+                    request_id=request_id,
                 ),
             )
         except QuotaUnavailableError as exc:
-            return JSONResponse(
+            log_request_status(
+                request_id=request_id,
+                phase="rejected",
+                entitlement_key=entitlement_key,
+                outcome="error",
+                reason="quota_unavailable",
+                detail=str(exc),
+            )
+            await _send_json(
+                send,
+                503,
                 {
                     "error": "Free chat quota service unavailable.",
                     "code": "FREE_QUOTA_UNAVAILABLE",
                     "detail": str(exc),
                 },
-                status_code=503,
             )
+            return
 
         if credentials is None:
-            return _deny_response(reason)
+            log_request_status(
+                request_id=request_id,
+                phase="denied",
+                entitlement_key=entitlement_key,
+                outcome="denied",
+                deny_reason=reason,
+                client_base_url=client_base_url,
+                client_api_key=mask_secret(client_api_key),
+                plan_name=graph_input.get("plan_name"),
+                expire_at=graph_input.get("expire_at"),
+            )
+            status, deny_payload = _deny_payload(reason)
+            await _send_json(send, status, deny_payload)
+            return
 
         _apply_credentials(graph_input, credentials)
         payload["input"] = graph_input
         modified_body = json.dumps(payload).encode("utf-8")
         quota_headers = _quota_headers(credentials)
 
-        async def receive():
-            return {
-                "type": "http.request",
-                "body": modified_body,
-                "more_body": False,
-            }
+        log_quota_event(
+            "downstream_body_prepared",
+            request_id=request_id,
+            entitlement_key=entitlement_key,
+            billing=credentials.billing,
+            original_body_size=len(body),
+            modified_body_size=len(modified_body),
+            input_keys=sorted(graph_input.keys()),
+            sent_base_url=graph_input.get("base_url"),
+            sent_api_key=mask_secret(graph_input.get("api_key")),
+            sent_trial=graph_input.get("trial"),
+            sent_model_name=graph_input.get("model_name"),
+        )
 
-        downstream_request = Request(request.scope, receive)
-        # Some Starlette internals look at ``_body`` directly.
-        downstream_request._body = modified_body
+        log_request_status(
+            request_id=request_id,
+            phase="allowed",
+            entitlement_key=entitlement_key,
+            outcome="allowed",
+            billing=credentials.billing,
+            quota={
+                "limit": credentials.snapshot.limit,
+                "used": credentials.snapshot.used,
+                "remaining": credentials.snapshot.remaining,
+            },
+            client_base_url=client_base_url,
+            client_api_key=mask_secret(client_api_key),
+            injected_base_url=credentials.base_url,
+            injected_api_key=mask_secret(credentials.api_key),
+            plan_name=graph_input.get("plan_name"),
+            expire_at=graph_input.get("expire_at"),
+            response_headers=quota_headers,
+        )
+
+        body_sent = False
+
+        async def receive_with_modified_body() -> dict[str, Any]:
+            nonlocal body_sent
+            if not body_sent:
+                body_sent = True
+                return {
+                    "type": "http.request",
+                    "body": modified_body,
+                    "more_body": False,
+                }
+            # Body already delivered. SSE/inner middleware poll receive() to
+            # listen for disconnects; we must NOT emit another http.request
+            # (Starlette's BaseHTTPMiddleware raises if it sees two of those).
+            # Forward to the original receive so http.disconnect propagates.
+            return await receive()
+
+        track_free = credentials.billing == "free"
+        status_code = 200
+        saw_error = False
+        stream_completed = False
+        refunded = False
+
+        async def maybe_refund(phase: str, **extra: Any) -> None:
+            nonlocal refunded
+            if not track_free or refunded:
+                return
+            refunded = True
+            log_request_status(
+                request_id=request_id,
+                phase=phase,
+                entitlement_key=entitlement_key,
+                outcome="refund",
+                billing="free",
+                **extra,
+            )
+            await loop.run_in_executor(None, refund_free_turn, entitlement_key)
+
+        async def send_with_quota(message: dict[str, Any]) -> None:
+            nonlocal status_code, saw_error, stream_completed
+
+            if message["type"] == "http.response.start":
+                status_code = message.get("status", 200)
+                headers = list(message.get("headers", []))
+                for key, value in quota_headers.items():
+                    headers.append((key.encode("latin-1"), value.encode("latin-1")))
+                message = {**message, "headers": headers}
+
+                if track_free:
+                    if status_code == 200:
+                        log_request_status(
+                            request_id=request_id,
+                            phase="stream_started",
+                            entitlement_key=entitlement_key,
+                            outcome="streaming",
+                            billing="free",
+                            status_code=status_code,
+                        )
+                    else:
+                        await maybe_refund(
+                            "stream_non_200", status_code=status_code
+                        )
+
+            elif message["type"] == "http.response.body":
+                chunk = message.get("body", b"")
+                if (
+                    track_free
+                    and chunk
+                    and not saw_error
+                    and _chunk_indicates_error(chunk)
+                ):
+                    saw_error = True
+                if not message.get("more_body", False):
+                    stream_completed = True
+                    if track_free and status_code == 200 and not refunded:
+                        if saw_error:
+                            await maybe_refund(
+                                "stream_incomplete",
+                                saw_error=True,
+                            )
+                        else:
+                            log_request_status(
+                                request_id=request_id,
+                                phase="finished",
+                                entitlement_key=entitlement_key,
+                                outcome="success",
+                                billing="free",
+                            )
+
+            await send(message)
 
         try:
-            response = await call_next(downstream_request)
-        except Exception:
-            if credentials.billing == "free":
-                await loop.run_in_executor(
-                    None, refund_free_turn, entitlement_key
-                )
+            await self.app(scope, receive_with_modified_body, send_with_quota)
+        except Exception as exc:
+            if track_free:
+                await maybe_refund("stream_error", detail=str(exc))
             raise
-
-        for key, value in quota_headers.items():
-            response.headers[key] = value
-
-        if credentials.billing != "free":
-            return response
-
-        if response.status_code != 200:
-            await loop.run_in_executor(None, refund_free_turn, entitlement_key)
-            return response
-
-        return self._wrap_stream_for_refund(response, entitlement_key)
-
-    def _wrap_stream_for_refund(
-        self, response: Response, entitlement_key: str
-    ) -> Response:
-        """Wrap a streaming response so that the previously reserved free turn
-        is refunded when the stream errors out, emits a LangGraph
-        ``event: error`` frame, or the client disconnects mid-stream.
-        """
-        if not hasattr(response, "body_iterator"):
-            return response
-
-        original_iterator = response.body_iterator
-
-        async def stream_with_refund():
-            saw_error = False
-            completed = False
-            try:
-                async for chunk in original_iterator:
-                    if not saw_error and _chunk_indicates_error(chunk):
-                        saw_error = True
-                    yield chunk
-                completed = True
-            finally:
-                if not completed or saw_error:
-                    try:
-                        loop = asyncio.get_running_loop()
-                        await loop.run_in_executor(
-                            None, refund_free_turn, entitlement_key
-                        )
-                    except Exception:
-                        pass
-
-        return StreamingResponse(
-            stream_with_refund(),
-            status_code=response.status_code,
-            headers=dict(response.headers),
-            media_type=response.media_type,
-        )
+        finally:
+            if (
+                track_free
+                and status_code == 200
+                and not stream_completed
+                and not refunded
+            ):
+                await maybe_refund("stream_aborted", completed=False)

@@ -3,7 +3,6 @@ Project deployment node for the Orca agent.
 Handles project deployment operations with tools and actions.
 """
 
-import os
 from typing import Literal
 from langchain_core.messages import SystemMessage
 from langgraph.types import Command
@@ -47,22 +46,11 @@ async def deploy_project_agent(
             },
         )
 
-        # Prefer credentials injected by FreeQuotaStreamMiddleware; fall back to env for trial.
-        if trial and not (base_url and api_key):
-            effective_api_key = os.getenv("TRIAL_API_KEY") or os.getenv(
-                "SYSTEM_OPENAI_API_KEY"
-            )
-            effective_base_url = os.getenv("TRIAL_BASE_URL") or os.getenv(
-                "SYSTEM_OPENAI_API_BASE_URL"
-            )
-        else:
-            effective_api_key = api_key
-            effective_base_url = base_url
-
         model = get_sealos_model(
-            base_url=effective_base_url,
-            api_key=effective_api_key,
+            base_url=base_url,
+            api_key=api_key,
             model_name=model_name,
+            trial=bool(trial),
         )
 
         model_with_tools = model.bind_tools(deploy_project_tools)

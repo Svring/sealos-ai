@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import dataclass
 from typing import Literal
@@ -11,6 +12,7 @@ from src.lib.quota.free_tier import (
     refund_free_turn,
     reserve_free_turn,
 )
+from src.lib.quota.quota_logging import log_billing_decision, log_quota_event
 from src.lib.quota.subscription_eligibility import is_free_subscription_eligible
 
 BillingMode = Literal["free", "user"]
@@ -65,6 +67,7 @@ def acquire_billing_credentials(
     model_name: str | None,
     plan_name: str | None = None,
     expire_at: str | None = None,
+    request_id: str | None = None,
 ) -> tuple[BillingCredentials | None, DenyReason | Literal["ok"]]:
     """Acquire billing credentials for a single LangGraph streaming run.
 
@@ -84,16 +87,50 @@ def acquire_billing_credentials(
             caller MUST translate this to a 503 (fail-closed).
     """
     platform = resolve_platform_openai_credentials()
+    platform_configured = platform is not None
     snapshot: FreeTierSnapshot | None = None
     free_eligible = is_free_subscription_eligible(plan_name, expire_at)
+    user_credentials_present = bool(
+        user_base_url and user_base_url.strip() and user_api_key and user_api_key.strip()
+    )
+
+    log_quota_event(
+        "acquire_billing_start",
+        request_id=request_id,
+        entitlement_key=entitlement_key,
+        platform_configured=platform_configured,
+        free_subscription_eligible=free_eligible,
+        user_credentials_present=user_credentials_present,
+        plan_name=plan_name,
+        expire_at=expire_at,
+        model_name=model_name,
+    )
 
     if platform is not None and free_eligible:
         try:
             snapshot = reserve_free_turn(entitlement_key)
-        except FreeTierExhaustedError:
+        except FreeTierExhaustedError as exc:
             snapshot = None
+            log_quota_event(
+                "free_turn_reserve_exhausted",
+                request_id=request_id,
+                entitlement_key=entitlement_key,
+                detail=str(exc),
+            )
         else:
             base_url, api_key = platform
+            log_billing_decision(
+                request_id=request_id or "",
+                entitlement_key=entitlement_key,
+                outcome="granted",
+                billing="free",
+                snapshot=snapshot,
+                plan_name=plan_name,
+                expire_at=expire_at,
+                user_credentials_present=user_credentials_present,
+                platform_configured=platform_configured,
+                free_subscription_eligible=free_eligible,
+            )
             return (
                 BillingCredentials(
                     billing="free",
@@ -110,8 +147,30 @@ def acquire_billing_credentials(
         if snapshot is None:
             try:
                 snapshot = get_free_tier_snapshot(entitlement_key)
-            except QuotaUnavailableError:
+            except QuotaUnavailableError as exc:
                 snapshot = _empty_snapshot()
+                log_quota_event(
+                    "quota_snapshot_unavailable",
+                    request_id=request_id,
+                    entitlement_key=entitlement_key,
+                    detail=str(exc),
+                    level=logging.WARNING,
+                )
+        log_billing_decision(
+            request_id=request_id or "",
+            entitlement_key=entitlement_key,
+            outcome="granted",
+            billing="user",
+            snapshot=snapshot,
+            plan_name=plan_name,
+            expire_at=expire_at,
+            user_credentials_present=user_credentials_present,
+            platform_configured=platform_configured,
+            free_subscription_eligible=free_eligible,
+            detail="using_user_credentials"
+            if user_credentials_present
+            else None,
+        )
         return (
             BillingCredentials(
                 billing="user",
@@ -125,9 +184,42 @@ def acquire_billing_credentials(
         )
 
     if platform is None:
+        log_billing_decision(
+            request_id=request_id or "",
+            entitlement_key=entitlement_key,
+            outcome="denied",
+            deny_reason="no_platform_creds",
+            plan_name=plan_name,
+            expire_at=expire_at,
+            user_credentials_present=user_credentials_present,
+            platform_configured=platform_configured,
+            free_subscription_eligible=free_eligible,
+        )
         return None, "no_platform_creds"
     if not free_eligible:
+        log_billing_decision(
+            request_id=request_id or "",
+            entitlement_key=entitlement_key,
+            outcome="denied",
+            deny_reason="subscription_ineligible",
+            plan_name=plan_name,
+            expire_at=expire_at,
+            user_credentials_present=user_credentials_present,
+            platform_configured=platform_configured,
+            free_subscription_eligible=free_eligible,
+        )
         return None, "subscription_ineligible"
+    log_billing_decision(
+        request_id=request_id or "",
+        entitlement_key=entitlement_key,
+        outcome="denied",
+        deny_reason="exhausted",
+        plan_name=plan_name,
+        expire_at=expire_at,
+        user_credentials_present=user_credentials_present,
+        platform_configured=platform_configured,
+        free_subscription_eligible=free_eligible,
+    )
     return None, "exhausted"
 
 

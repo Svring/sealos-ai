@@ -29,6 +29,7 @@ async def suggestion_agent(
             base_url,
             api_key,
             model_name,
+            trial,
         ) = get_state_values(
             state,
             {
@@ -36,11 +37,15 @@ async def suggestion_agent(
                 "base_url": None,
                 "api_key": None,
                 "model_name": None,
+                "trial": False,
             },
         )
 
         model = get_sealos_model(
-            base_url=base_url, api_key=api_key, model_name=model_name
+            base_url=base_url,
+            api_key=api_key,
+            model_name=model_name,
+            trial=bool(trial),
         )
 
         # Configure model with structured output

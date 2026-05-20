@@ -33,6 +33,7 @@ async def propose_project_agent(
             api_key,
             model_name,
             kubeconfig,
+            trial,
         ) = get_state_values(
             state,
             {
@@ -41,11 +42,15 @@ async def propose_project_agent(
                 "api_key": None,
                 "model_name": None,
                 "kubeconfig": None,
+                "trial": False,
             },
         )
 
         model = get_sealos_model(
-            base_url=base_url, api_key=api_key, model_name=model_name
+            base_url=base_url,
+            api_key=api_key,
+            model_name=model_name,
+            trial=bool(trial),
         )
 
         # Get copilot actions and add the propose_project tool

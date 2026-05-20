@@ -14,6 +14,7 @@ from src.lib.quota.resolve_credentials import (
     acquire_billing_credentials,
     resolve_platform_openai_credentials,
 )
+from src.lib.quota.quota_logging import ensure_quota_logging_configured
 from src.lib.quota.subscription_eligibility import (
     is_free_subscription_eligible,
     parse_subscription_expiry,
@@ -34,4 +35,5 @@ __all__ = [
     "resolve_platform_openai_credentials",
     "is_free_subscription_eligible",
     "parse_subscription_expiry",
+    "ensure_quota_logging_configured",
 ]

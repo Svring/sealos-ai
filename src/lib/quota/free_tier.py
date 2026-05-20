@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -5,6 +6,7 @@ from datetime import datetime, timezone
 import psycopg
 from psycopg import sql
 
+from src.lib.quota.quota_logging import log_quota_event, snapshot_fields
 from src.lib.quota.types import (
     ASSISTANT_DB_SCHEMA,
     ASSISTANT_ENTITLEMENTS_TABLE,
@@ -144,12 +146,24 @@ def reserve_free_turn(namespace_key: str) -> FreeTierSnapshot:
         ) from exc
 
     if row is None:
+        log_quota_event(
+            "free_turn_reserve_failed",
+            entitlement_key=namespace_key,
+            limit=limit,
+            reason="exhausted",
+        )
         raise FreeTierExhaustedError(
             f"namespace {namespace_key!r} has consumed all {limit} free turns"
         )
 
     used = int(row[0])
-    return FreeTierSnapshot(limit=limit, used=used, remaining=max(0, limit - used))
+    snapshot = FreeTierSnapshot(limit=limit, used=used, remaining=max(0, limit - used))
+    log_quota_event(
+        "free_turn_reserved",
+        entitlement_key=namespace_key,
+        quota=snapshot_fields(snapshot),
+    )
+    return snapshot
 
 
 def refund_free_turn(namespace_key: str) -> bool:
@@ -179,7 +193,20 @@ def refund_free_turn(namespace_key: str) -> bool:
     try:
         with psycopg.connect(database_url) as conn:
             row = conn.execute(refund_query, (now, namespace_key)).fetchone()
-    except psycopg.Error:
+    except psycopg.Error as exc:
+        log_quota_event(
+            "free_turn_refund_failed",
+            entitlement_key=namespace_key,
+            detail=str(exc),
+            level=logging.WARNING,
+        )
         return False
 
-    return row is not None
+    refunded = row is not None
+    log_quota_event(
+        "free_turn_refunded" if refunded else "free_turn_refund_noop",
+        entitlement_key=namespace_key,
+        refunded=refunded,
+        quota_after={"used": int(row[0])} if row else None,
+    )
+    return refunded

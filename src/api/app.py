@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+import logging
 import requests
 import asyncio
 import os
@@ -12,6 +13,15 @@ import json
 from src.api.free_quota_middleware import FreeQuotaStreamMiddleware
 
 load_dotenv()
+
+
+def _configure_free_quota_logging() -> None:
+    from src.lib.quota.quota_logging import ensure_quota_logging_configured
+
+    ensure_quota_logging_configured()
+
+
+_configure_free_quota_logging()
 
 app = FastAPI()
 

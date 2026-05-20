@@ -70,6 +70,7 @@ async def manage_project_agent(
             api_key,
             model_name,
             project_context,
+            trial,
         ) = get_state_values(
             state,
             {
@@ -78,11 +79,15 @@ async def manage_project_agent(
                 "api_key": None,
                 "model_name": None,
                 "project_context": None,
+                "trial": False,
             },
         )
 
         model = get_sealos_model(
-            base_url=base_url, api_key=api_key, model_name=model_name
+            base_url=base_url,
+            api_key=api_key,
+            model_name=model_name,
+            trial=bool(trial),
         )
 
         all_tools = tools
