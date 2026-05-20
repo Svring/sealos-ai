@@ -47,23 +47,23 @@ async def deploy_project_agent(
             },
         )
 
-        # Use TRIAL_API_KEY and TRIAL_BASE_URL if trial is true, otherwise use the provided values
-        if trial:
-            effective_api_key = os.getenv("TRIAL_API_KEY")
-            effective_base_url = os.getenv("TRIAL_BASE_URL")
-            # If trial, use TRIAL_BASE_URL and TRIAL_API_KEY
-            model = get_sealos_model(
-                base_url=effective_base_url, api_key=effective_api_key
+        # Prefer credentials injected by FreeQuotaStreamMiddleware; fall back to env for trial.
+        if trial and not (base_url and api_key):
+            effective_api_key = os.getenv("TRIAL_API_KEY") or os.getenv(
+                "SYSTEM_OPENAI_API_KEY"
+            )
+            effective_base_url = os.getenv("TRIAL_BASE_URL") or os.getenv(
+                "SYSTEM_OPENAI_API_BASE_URL"
             )
         else:
             effective_api_key = api_key
             effective_base_url = base_url
-            # If not trial, pass all parameters
-            model = get_sealos_model(
-                base_url=effective_base_url,
-                api_key=effective_api_key,
-                model_name=model_name,
-            )
+
+        model = get_sealos_model(
+            base_url=effective_base_url,
+            api_key=effective_api_key,
+            model_name=model_name,
+        )
 
         model_with_tools = model.bind_tools(deploy_project_tools)
 

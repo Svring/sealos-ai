@@ -9,6 +9,8 @@ import os
 import re
 import json
 
+from src.api.free_quota_middleware import FreeQuotaStreamMiddleware
+
 load_dotenv()
 
 app = FastAPI()
@@ -234,6 +236,7 @@ class ThreadSearchFilterMiddleware(BaseHTTPMiddleware):
 
 # Add middleware to the app (order matters - route validation first)
 app.add_middleware(RouteValidationMiddleware)
+app.add_middleware(FreeQuotaStreamMiddleware)
 app.add_middleware(AuthorizationMiddleware)
 app.add_middleware(ThreadSearchFilterMiddleware)
 
